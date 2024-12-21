@@ -122,7 +122,7 @@ const App = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const normalizedName = name.normalize('NFD').replace(/\p{Diacritic}/gu, '');
+    const normalizedName = name.normalize('NFD').trim().replace(/\p{Diacritic}/gu, '').replace(' ', '_');
     setPendingNames((prev) => [...prev, normalizedName]);
     setName('');
     const validation = await fetchWikidataInfo(normalizedName);
