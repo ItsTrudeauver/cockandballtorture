@@ -387,6 +387,7 @@ const App = () => {
         <input
           type="text"
           value={name}
+          disabled={!isRunning}
           onChange={(e) => setName(e.target.value)}
           placeholder="Enter a name"
           style={{
