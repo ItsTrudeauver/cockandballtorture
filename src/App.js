@@ -74,7 +74,6 @@ const App = () => {
       if (data.search && data.search.length > 0) {
         // Loop through the first 10 results
         for (const bestMatch of data.search) {
-          // Fetch the detailed entity data for each result
           const detailsRes = await fetch(
             `https://www.wikidata.org/wiki/Special:EntityData/${bestMatch.id}.json`
           );
@@ -83,32 +82,88 @@ const App = () => {
           }
   
           const detailsData = await detailsRes.json();
-          const entityId = bestMatch.id;
+          const entityData = detailsData.entities[bestMatch.id];
+          const genderClaim = entityData.claims.P21?.[0]?.mainsnak?.datavalue?.value?.id;
+          const imageClaim = entityData.claims.P18?.[0]?.mainsnak?.datavalue?.value;
   
-          // Check if the entity is human
-          const isHuman = await checkIfHuman(entityId);
-  
+          // Check if the entity is human (P31 = Q5)
+          const isHuman = await checkIfHuman(bestMatch.id);
           if (isHuman) {
+            let gender;
+            let genderNotification = `${bestMatch.label} does not have a clear gender identity.`;  // Default notification
+  
+            switch (genderClaim) {
+              case 'Q6581097': // cisgender male
+              case 'Q2449503': // transgender male (trans man)
+                gender = 'male';
+                genderNotification = `${bestMatch.label} is male.`;
+                break;
+              case 'Q6581072': // cisgender female
+              case 'Q1052281': // transgender female (trans woman)
+                gender = 'female';
+                genderNotification = `${bestMatch.label} is female.`;
+                break;
+              case 'Q18274210': // non-binary
+                gender = 'non-binary';
+                genderNotification = `${bestMatch.label} is non-binary.`;
+                break;
+              case 'Q22258207': // genderfluid
+                gender = 'genderfluid';
+                genderNotification = `${bestMatch.label} is genderfluid.`;
+                break;
+              case 'Q20676560': // agender
+                gender = 'agender';
+                genderNotification = `${bestMatch.label} is agender.`;
+                break;
+              case 'Q1739990': // bigender
+                gender = 'bigender';
+                genderNotification = `${bestMatch.label} is bigender.`;
+                break;
+              case 'Q31431': // two-spirit
+                gender = 'two-spirit';
+                genderNotification = `${bestMatch.label} is two-spirit.`;
+                break;
+              case 'Q23408324': // genderqueer
+                gender = 'genderqueer';
+                genderNotification = `${bestMatch.label} is genderqueer.`;
+                break;
+              default:
+                gender = null;
+                genderNotification = `${bestMatch.label} has an unspecified or other gender identity.`;
+                break;
+            }
+  
+            if (!gender) {
+              showNotification(genderNotification);
+              return { isValid: false, error: genderNotification };
+            }
+  
+            const url = `https://www.wikidata.org/wiki/${bestMatch.id}`;
             return {
               isValid: true,
-              entity: bestMatch,
-              isHuman: true,  // Return the first human entity found
+              gender,
+              url,
+              name: bestMatch.label,
+              image: imageClaim
+                ? `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(imageClaim)}`
+                : null,
             };
           }
         }
   
-        // If no human found in the results
+        // If no human entity is found in the top 10 results
         return { isValid: false, error: 'No human entity found in the top 10 results.' };
-      } else {
-        return { isValid: false, error: 'No matching entity found.' };
       }
+  
+      return { isValid: false, error: 'No matching entity found.' };
     } catch (error) {
-      console.error('Error fetching Wikidata info:', error);
-      return { isValid: false, error: 'An error occurred while fetching the data.' };
+      return { isValid: false, error: error.message };
     }
+  
+    return { isValid: false };
   };
   
-  // Function to check if an entity is human by inspecting P31 claims
+  // Function to check if an entity is human by inspecting P31 claims (Q5 = Human)
   async function checkIfHuman(entityId) {
     try {
       const response = await fetch(`https://www.wikidata.org/w/api.php?action=wbgetentities&ids=${entityId}&props=claims&format=json`);
@@ -119,52 +174,17 @@ const App = () => {
       if (claims) {
         for (const claim of claims) {
           if (claim.mainsnak.datavalue.value.id === 'Q5') {
-            return true;  // It's a human!
+            return true; // It's a human
           }
         }
       }
-      return false;  // Not a human
-   
-  
-  
-        const detailsData = await detailsRes.json();
-        const entityData = detailsData.entities[bestMatch.id];
-        const genderClaim = entityData.claims.P21?.[0]?.mainsnak?.datavalue?.value?.id;
-        const imageClaim = entityData.claims.P18?.[0]?.mainsnak?.datavalue?.value;
-
-        let gender;
-        switch (genderClaim) {
-          case 'Q6581097':
-            gender = 'male';
-            break;
-          case 'Q6581072':
-            gender = 'female';
-            break;
-          default:
-            gender = null;
-            showNotification(`${bestMatch.label} is not a valid entity.`);
-            break;
-        }
-
-        if (!gender) return { isValid: false, error: `${bestMatch.label} is not a valid entity.` };
-
-        const url = `https://www.wikidata.org/wiki/${bestMatch.id}`;
-        return {
-          isValid: true,
-          gender,
-          url,
-          name: bestMatch.label,
-          image: imageClaim
-            ? `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(imageClaim)}`
-            : null,
-        };
-      }
-     catch (error) {
-      return { isValid: false, error: error.message };
+      return false; // Not a human
+    } catch (error) {
+      console.error('Error checking human classification:', error);
+      return false; // Default to not a human in case of error
     }
-
-    return { isValid: false };
-  };
+  }
+  
 
   const handleSubmit = async (e) => {
     e.preventDefault();
