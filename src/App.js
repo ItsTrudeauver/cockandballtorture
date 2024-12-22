@@ -32,6 +32,8 @@ const App = () => {
     return levenshteinDistance(name1.toLowerCase(), name2.toLowerCase()) <= threshold;
   };
   
+  
+    
 
   const collator = new Intl.Collator('en', { sensitivity: 'base', ignorePunctuation: true });
   const lastCorrectTime = useRef(null);
@@ -67,22 +69,33 @@ const App = () => {
       if (res.status === 429) {
         return { isValid: false, error: 'Rate limit exceeded. Please try again later.' };
       }
-
+  
       const data = await res.json();
       if (data.search && data.search.length > 0) {
         const bestMatch =
           data.search.find((item) => item.label.toLowerCase().includes(inputName.toLowerCase())) ||
           data.search[0];
-
+  
         const detailsRes = await fetch(
           `https://www.wikidata.org/wiki/Special:EntityData/${bestMatch.id}.json`
         );
         if (detailsRes.status === 429) {
           return { isValid: false, error: 'Rate limit exceeded on entity details. Please try again later.' };
         }
-
+  
         const detailsData = await detailsRes.json();
         const entityData = detailsData.entities[bestMatch.id];
+  
+        // Check if the entity is a human (P31:Q5)
+        const instanceOfClaims = entityData.claims.P31 || [];
+        const isHuman = instanceOfClaims.some(
+          (claim) => claim.mainsnak?.datavalue?.value?.id === 'Q5'
+        );
+  
+        if (!isHuman) {
+          return { isValid: false, error: `${bestMatch.label} is not a human entity.` };
+        }
+
         const genderClaim = entityData.claims.P21?.[0]?.mainsnak?.datavalue?.value?.id;
         const imageClaim = entityData.claims.P18?.[0]?.mainsnak?.datavalue?.value;
 
@@ -186,6 +199,23 @@ const App = () => {
       setIsRunning(false);
     }
   };
+  const stopGameAndCalculateTime = () => {
+    setIsRunning(false); // Stop the timer
+    const menTime = timeIntervals
+      .filter((_, index) => index < menCount) // First `menCount` intervals for men
+      .reduce((acc, time) => acc + parseFloat(time), 0);
+  
+    const womenTime = timeIntervals
+      .filter((_, index) => index >= menCount) // Remaining intervals for women
+      .reduce((acc, time) => acc + parseFloat(time), 0);
+  
+    alert(`Game complete!\nTotal time: ${timer}s\nMen's time: ${menTime}s\nWomen's time: ${womenTime}s`);
+  };
+  if (menCount + 1 === 100 && womenCount === 100) {
+    stopGameAndCalculateTime(); // Stop and announce results
+  } else if (menCount === 100 && womenCount + 1 === 100) {
+    stopGameAndCalculateTime(); // Stop and announce results
+  }
 
   const styles = {
     container: {
@@ -248,7 +278,7 @@ const App = () => {
 
   const renderList = (players) => {
     if (!Array.isArray(players) || players.length === 0) {
-      return <div style={{ textAlign: 'center', color: '#999' }}>No players to display.</div>;
+      return <div style={{ textAlign: 'center', color: '#999' }}>Record has not begun.</div>;
     }
 
     return players.map((player, index) => (
