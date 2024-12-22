@@ -63,7 +63,7 @@ const App = () => {
 
   const fetchWikidataInfo = async (inputName) => {
     const url = `https://www.wikidata.org/w/api.php?action=wbsearchentities&search=${encodeURIComponent(inputName)}&language=en&limit=10&format=json&origin=*`;
-
+  
     try {
       const res = await fetch(url);
       if (res.status === 429) {
@@ -72,30 +72,63 @@ const App = () => {
   
       const data = await res.json();
       if (data.search && data.search.length > 0) {
-        const bestMatch =
-          data.search.find((item) => item.label.toLowerCase().includes(inputName.toLowerCase())) ||
-          data.search[0];
+        // Loop through the first 10 results
+        for (const bestMatch of data.search) {
+          // Fetch the detailed entity data for each result
+          const detailsRes = await fetch(
+            `https://www.wikidata.org/wiki/Special:EntityData/${bestMatch.id}.json`
+          );
+          if (detailsRes.status === 429) {
+            return { isValid: false, error: 'Rate limit exceeded on entity details. Please try again later.' };
+          }
   
-        const detailsRes = await fetch(
-          `https://www.wikidata.org/wiki/Special:EntityData/${bestMatch.id}.json`
-        );
-        if (detailsRes.status === 429) {
-          return { isValid: false, error: 'Rate limit exceeded on entity details. Please try again later.' };
+          const detailsData = await detailsRes.json();
+          const entityId = bestMatch.id;
+  
+          // Check if the entity is human
+          const isHuman = await checkIfHuman(entityId);
+  
+          if (isHuman) {
+            return {
+              isValid: true,
+              entity: bestMatch,
+              isHuman: true,  // Return the first human entity found
+            };
+          }
         }
+  
+        // If no human found in the results
+        return { isValid: false, error: 'No human entity found in the top 10 results.' };
+      } else {
+        return { isValid: false, error: 'No matching entity found.' };
+      }
+    } catch (error) {
+      console.error('Error fetching Wikidata info:', error);
+      return { isValid: false, error: 'An error occurred while fetching the data.' };
+    }
+  };
+  
+  // Function to check if an entity is human by inspecting P31 claims
+  async function checkIfHuman(entityId) {
+    try {
+      const response = await fetch(`https://www.wikidata.org/w/api.php?action=wbgetentities&ids=${entityId}&props=claims&format=json`);
+      const data = await response.json();
+  
+      const claims = data.entities[entityId]?.claims?.P31;
+  
+      if (claims) {
+        for (const claim of claims) {
+          if (claim.mainsnak.datavalue.value.id === 'Q5') {
+            return true;  // It's a human!
+          }
+        }
+      }
+      return false;  // Not a human
+   
+  
   
         const detailsData = await detailsRes.json();
         const entityData = detailsData.entities[bestMatch.id];
-  
-        // Check if the entity is a human (P31:Q5)
-        const instanceOfClaims = entityData.claims.P31 || [];
-        const isHuman = instanceOfClaims.some(
-          (claim) => claim.mainsnak?.datavalue?.value?.id === 'Q5'
-        );
-  
-        if (!isHuman) {
-          return { isValid: false, error: `${bestMatch.label} is not a human entity.` };
-        }
-
         const genderClaim = entityData.claims.P21?.[0]?.mainsnak?.datavalue?.value?.id;
         const imageClaim = entityData.claims.P18?.[0]?.mainsnak?.datavalue?.value;
 
@@ -126,7 +159,7 @@ const App = () => {
             : null,
         };
       }
-    } catch (error) {
+     catch (error) {
       return { isValid: false, error: error.message };
     }
 
