@@ -10,34 +10,90 @@
       content="Web site created using create-react-app"
     />
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
-    <!--
-      manifest.json provides metadata used when your web app is installed on a
-      user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
-    -->
+   
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
-    <!--
-      Notice the use of %PUBLIC_URL% in the tags above.
-      It will be replaced with the URL of the `public` folder during the build.
-      Only files inside the `public` folder can be referenced from the HTML.
-
-      Unlike "/favicon.ico" or "favicon.ico", "%PUBLIC_URL%/favicon.ico" will
-      work correctly both with client-side routing and a non-root public URL.
-      Learn how to configure a non-root public URL by running `npm run build`.
-    -->
+    
     <title>The Name Game</title>
   </head>
   <body>
-    <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
-    <!--
-      This HTML file is a template.
-      If you open it directly in the browser, you will see an empty page.
 
-      You can add webfonts, meta tags, or analytics to this file.
-      The build step will place the bundled scripts into the <body> tag.
+    <!-- Trigger buttons -->
+    <button onclick="openAuthModal(true)" style="margin: 20px; padding: 10px; background: green; color: white; border: none; border-radius: 4px;">Sign Up</button>
+    <button onclick="openAuthModal(false)" style="margin: 20px; padding: 10px; background: blue; color: white; border: none; border-radius: 4px;">Log In</button>
 
-      To begin the development, run `npm start` or `yarn start`.
-      To create a production bundle, use `npm run build` or `yarn build`.
-    -->
-  </body>
+    <!-- Sign Up/Login Modal -->
+    <div id="auth-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); justify-content: center; align-items: center;">
+        <div style="background: white; padding: 20px; border-radius: 8px; width: 300px;">
+            <h2 id="auth-title">Sign Up</h2>
+            <form id="auth-form">
+                <div style="margin-bottom: 15px;">
+                    <label for="username">Username:</label>
+                    <input type="text" id="username" name="username" required style="width: 100%; padding: 5px; margin-top: 5px;">
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label for="password">Password:</label>
+                    <input type="password" id="password" name="password" required style="width: 100%; padding: 5px; margin-top: 5px;">
+                </div>
+                <button type="submit" style="width: 100%; padding: 10px; background: blue; color: white; border: none; border-radius: 4px;">Submit</button>
+            </form>
+            <button id="close-modal" style="margin-top: 10px; padding: 10px; width: 100%; background: gray; color: white; border: none; border-radius: 4px;">Close</button>
+        </div>
+    </div>
+
+    <script>
+       const BASE_URL = 'https://100m100w.vercel.app/api';
+
+const authModal = document.getElementById('auth-modal');
+const authForm = document.getElementById('auth-form');
+const authTitle = document.getElementById('auth-title');
+const closeModalButton = document.getElementById('close-modal');
+
+// Function to open the modal
+function openAuthModal(isSignUp) {
+  authTitle.textContent = isSignUp ? 'Sign Up' : 'Log In';
+  authModal.style.display = 'flex';
+}
+
+// Function to close the modal
+closeModalButton.addEventListener('click', () => {
+  authModal.style.display = 'none';
+});
+
+// Form submit handler with updated backend URL
+authForm.addEventListener('submit', async (event) => {
+  event.preventDefault(); // Prevent default form submission
+
+  const username = document.getElementById('username').value;
+  const password = document.getElementById('password').value;
+
+  // Determine if it's a Sign Up or Log In request
+  const isSignUp = authTitle.textContent === 'Sign Up';
+  const endpoint = isSignUp ? '/register' : '/login';
+  const payload = { username, password };
+
+  try {
+    // Send request to backend
+    const response = await fetch(`${BASE_URL}${endpoint}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    if (response.ok) {
+      const result = await response.json();
+      alert(isSignUp ? 'Registration successful!' : `Welcome back, ${result.username}!`);
+      authModal.style.display = 'none'; // Close modal after success
+    } else {
+      const error = await response.text();
+      alert(`Error: ${error}`);
+    }
+  } catch (error) {
+    console.error('Error communicating with the server:', error);
+    alert('An error occurred. Please try again later.');
+  }
+});
+    </script>
+</body>
+
 </html>
