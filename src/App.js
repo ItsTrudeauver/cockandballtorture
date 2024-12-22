@@ -257,7 +257,6 @@ const App = () => {
       background: 'rgba(0, 0, 0, 0.7)',
       borderRadius: '15px',
       backdropFilter: 'blur(10px)',
-      boxShadow: '0 6px 20px rgba(0, 0, 0, 0.2)',
       maxWidth: '900px',
       margin: 'auto',
   },
@@ -266,17 +265,15 @@ const App = () => {
     fontFamily: 'Audiowide, sans serif',
     margin: '20px',
     color: 'transparent',
-    background: 'url("https://cdn.donmai.us/original/fc/75/fc75d6950dda9b8042fb55a155a58109.jpg") no-repeat center center fixed',
+    background: 'url("https://ibb.co/hRjFDX7") no-repeat center center fixed',
     backgroundSize: 'cover',
     backgroundClip: 'text',
     WebkitBackgroundClip: 'text',
     zIndex: 2,
     position: 'relative',
-    textShadow: 'none', // Remove the glow
     // Adding a sleek outline
     WebkitTextStroke: '0.5px rgba(255, 255, 255, 0.7)', // Subtle white stroke
     textStroke: '0.5px rgba(255, 255, 255, 0.7)', // For modern browsers
-    filter: 'brightness(1.3)', // Slightly brighter
 },
   mainHeaderWrapper: {
     position: 'relative',
@@ -333,8 +330,7 @@ const App = () => {
         background: '#FFC857',
         padding: '15px 25px',
         borderRadius: '8px',
-        boxShadow: '0 4px 10px rgba(0, 0, 0, 0.2)',
-        zIndex: 1000,
+        zIndex: 4,
         fontSize: '1rem',
         color: '#333',
     },
