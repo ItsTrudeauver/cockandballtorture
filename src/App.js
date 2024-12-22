@@ -61,77 +61,104 @@ const App = () => {
 
   const fetchWikidataInfo = async (inputName) => {
     const url = `https://www.wikidata.org/w/api.php?action=wbsearchentities&search=${encodeURIComponent(inputName)}&language=en&limit=10&format=json&origin=*`;
-
+  
     try {
       const res = await fetch(url);
       if (res.status === 429) {
         return { isValid: false, error: 'Rate limit exceeded. Please try again later.' };
       }
-
+  
       const data = await res.json();
       if (data.search && data.search.length > 0) {
-        const bestMatch =
-          data.search.find((item) => item.label.toLowerCase().includes(inputName.toLowerCase())) ||
-          data.search[0];
-
+        let bestMatch = null;
+  
+        // Loop through the search results to find the first entity with Q5 (human) in the hierarchy
+        for (const item of data.search) {
+          const detailsRes = await fetch(
+            `https://www.wikidata.org/wiki/Special:EntityData/${item.id}.json`
+          );
+  
+          if (detailsRes.status === 429) {
+            return { isValid: false, error: 'Rate limit exceeded on entity details. Please try again later.' };
+          }
+  
+          const detailsData = await detailsRes.json();
+          const entityData = detailsData.entities[item.id];
+  
+          if (entityData.claims.P31) {
+            const isHuman = entityData.claims.P31.some(
+              (claim) => claim.mainsnak.datavalue?.value?.id === 'Q5'
+            );
+            if (isHuman) {
+              bestMatch = item;
+              break;
+            }
+          }
+        }
+  
+        // If no match with Q5 is found, return as invalid
+        if (!bestMatch) {
+          return { isValid: false, error: 'No valid human entity found.' };
+        }
+  
+        // Proceed with the rest of the logic for gender and image retrieval
         const detailsRes = await fetch(
           `https://www.wikidata.org/wiki/Special:EntityData/${bestMatch.id}.json`
         );
-        if (detailsRes.status === 429) {
-          return { isValid: false, error: 'Rate limit exceeded on entity details. Please try again later.' };
-        }
-
         const detailsData = await detailsRes.json();
         const entityData = detailsData.entities[bestMatch.id];
+  
         const genderClaim = entityData.claims.P21?.[0]?.mainsnak?.datavalue?.value?.id;
         const imageClaim = entityData.claims.P18?.[0]?.mainsnak?.datavalue?.value;
-        
-        let gender;
-            let genderNotification = `${bestMatch.label} does not have a clear gender identity.`;  // Default notification
   
-            switch (genderClaim) {
-              case 'Q6581097': // cisgender male
-              case 'Q2449503': // transgender male (trans man)
-                gender = 'male';
-                genderNotification = `${bestMatch.label} is male.`;
-                break;
-              case 'Q6581072': // cisgender female
-              case 'Q1052281': // transgender female (trans woman)
-                gender = 'female';
-                genderNotification = `${bestMatch.label} is female.`;
-                break;
-              case 'Q18274210': // non-binary
-                gender = 'non-binary';
-                genderNotification = `${bestMatch.label} is non-binary.`;
-                break;
-              case 'Q22258207': // genderfluid
-                gender = 'genderfluid';
-                genderNotification = `${bestMatch.label} is genderfluid.`;
-                break;
-              case 'Q20676560': // agender
-                gender = 'agender';
-                genderNotification = `${bestMatch.label} is agender.`;
-                break;
-              case 'Q1739990': // bigender
-                gender = 'bigender';
-                genderNotification = `${bestMatch.label} is bigender.`;
-                break;
-              case 'Q31431': // two-spirit
-                gender = 'two-spirit';
-                genderNotification = `${bestMatch.label} is two-spirit.`;
-                break;
-              case 'Q23408324': // genderqueer
-                gender = 'genderqueer';
-                genderNotification = `${bestMatch.label} is genderqueer.`;
-                break;
-              default:
-                gender = null;
-                genderNotification = `${bestMatch.label} has an unspecified or other gender identity.`;
-                break;
+        let gender;
+        let genderNotification = `${bestMatch.label} does not have a clear gender identity.`;
+  
+        switch (genderClaim) {
+          case 'Q6581097': // cisgender male
+          case 'Q2449503': // transgender male (trans man)
+            gender = 'male';
+            genderNotification = `${bestMatch.label} is male.`;
+            break;
+          case 'Q6581072': // cisgender female
+          case 'Q1052281': // transgender female (trans woman)
+            gender = 'female';
+            genderNotification = `${bestMatch.label} is female.`;
+            break;
+          case 'Q18274210': // non-binary
+            gender = 'non-binary';
+            genderNotification = `${bestMatch.label} is non-binary.`;
+            break;
+          case 'Q22258207': // genderfluid
+            gender = 'genderfluid';
+            genderNotification = `${bestMatch.label} is genderfluid.`;
+            break;
+          case 'Q20676560': // agender
+            gender = 'agender';
+            genderNotification = `${bestMatch.label} is agender.`;
+            break;
+          case 'Q1739990': // bigender
+            gender = 'bigender';
+            genderNotification = `${bestMatch.label} is bigender.`;
+            break;
+          case 'Q31431': // two-spirit
+            gender = 'two-spirit';
+            genderNotification = `${bestMatch.label} is two-spirit.`;
+            break;
+          case 'Q23408324': // genderqueer
+            gender = 'genderqueer';
+            genderNotification = `${bestMatch.label} is genderqueer.`;
+            break;
+          default:
+            gender = null;
+            genderNotification = `${bestMatch.label} has an unspecified or other gender identity.`;
+            break;
         }
-
-        if (!gender) return { isValid: false, error: `${bestMatch.label} is not a valid entity.` };
-
+  
+        if (!gender) {
+          return { isValid: false, error: `${bestMatch.label} is not a valid entity.` };
+        }
+  
         const url = `https://www.wikidata.org/wiki/${bestMatch.id}`;
         return {
           isValid: true,
@@ -146,9 +173,10 @@ const App = () => {
     } catch (error) {
       return { isValid: false, error: error.message };
     }
-
+  
     return { isValid: false };
   };
+  
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -218,217 +246,252 @@ const App = () => {
   };
 
   const styles = {
+    
+    
     container: {
+      height: '720px',
       textAlign: 'center',
       padding: '20px',
-      fontFamily: 'Open Sans, Arial, sans-serif',
-      color: '#333',
-      background: '#f0f0f5',
-      borderRadius: '10px',
-      boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
-    },
+      fontFamily: 'Roboto, Arial, sans-serif',
+      color: '#fff',
+      background: 'rgba(0, 0, 0, 0.7)',
+      borderRadius: '15px',
+      backdropFilter: 'blur(10px)',
+      boxShadow: '0 6px 20px rgba(0, 0, 0, 0.2)',
+      maxWidth: '900px',
+      margin: 'auto',
+  },
+  mainHeader: {
+    fontSize: '3rem',
+    fontFamily: 'Audiowide, sans serif',
+    margin: '20px',
+    color: 'transparent',
+    background: 'url("https://cdn.donmai.us/original/fc/75/fc75d6950dda9b8042fb55a155a58109.jpg") no-repeat center center fixed',
+    backgroundSize: 'cover',
+    backgroundClip: 'text',
+    WebkitBackgroundClip: 'text',
+    zIndex: 2,
+    position: 'relative',
+    textShadow: 'none', // Remove the glow
+    // Adding a sleek outline
+    WebkitTextStroke: '0.5px rgba(255, 255, 255, 0.7)', // Subtle white stroke
+    textStroke: '0.5px rgba(255, 255, 255, 0.7)', // For modern browsers
+    filter: 'brightness(1.3)', // Slightly brighter
+},
+  mainHeaderWrapper: {
+    position: 'relative',
+    display: 'inline-block',
+},
+  outline: {
+    content: '""', 
+    position: 'absolute',
+    top: '0',
+    left: '0',
+    width: '100%',
+    height: '100%',
+    border: '2px solid rgba(255, 255, 255, 0.8)', // Border color
+    zIndex: -1, // Ensure it's behind the text
+},
+    
     list: {
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '10px',
-      maxHeight: '300px',
-      overflowY: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '15px',
+        height: '150px',
+        overflowY: 'auto',
+        padding: '5px',
+        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+        borderRadius: '5px',
     },
     listItem: {
-      display: 'flex',
-      alignItems: 'center',
-      gap: '10px',
-      border: '1px solid #ccc',
-      borderRadius: '5px',
-      padding: '10px',
-      backgroundColor: '#fff',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '5px',
+        border: '1px solid rgba(255, 255, 255, 0.3)',
+        borderRadius: '3px',
+        padding: '5px',
+        backgroundColor: 'rgba(255, 255, 255, 0.2)',
     },
     nameBox: {
-      flexGrow: 1,
-      display: 'flex',
-      alignItems: 'center',
-      padding: '5px 10px',
-      backgroundColor: '#f9f9f9',
-      borderRadius: '5px',
+        flexGrow: 1,
+        display: 'flex',
+        alignItems: 'center',
+        padding: '10px',
+        backgroundColor: 'rgba(255, 255, 255, 0.15)',
+        borderRadius: '8px',
     },
     link: {
-      textDecoration: 'none',
-      color: '#1D4ED8',
-      fontSize: '0.9rem',
+        textDecoration: 'none',
+        color: '#4ECCA3',
+        fontSize: '1rem',
+        fontWeight: 'bold',
     },
     notification: {
-      position: 'fixed',
-      top: '20px',
-      right: '20px',
-      background: '#ffcc00',
-      padding: '10px 20px',
-      borderRadius: '5px',
-      boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
-      zIndex: 1000,
-      fontSize: '1rem',
-      color: '#333',
+        position: 'fixed',
+        top: '20px',
+        right: '20px',
+        background: '#FFC857',
+        padding: '15px 25px',
+        borderRadius: '8px',
+        boxShadow: '0 4px 10px rgba(0, 0, 0, 0.2)',
+        zIndex: 1000,
+        fontSize: '1rem',
+        color: '#333',
     },
     header: {
-      marginBottom: '10px',
-      fontSize: '1rem',
-      fontWeight: 'bold',
-      color: '#333',
+        fontFamily:'Poppins, sans serif',
+        marginBottom: '20px',
+        fontSize: '1.8rem',
+        fontWeight: '300',
+        color: '#fff',
+        
     },
-  };
+    
+  
+  
+  
+    
+};
 
-  const renderList = (players) => {
+const renderList = (players) => {
     if (!Array.isArray(players) || players.length === 0) {
-      return <div style={{ textAlign: 'center', color: '#999' }}>No players to display.</div>;
+        return <div style={{ textAlign: 'center', color: '#bbb' }}>Record has not begun.</div>;
     }
 
     return players.map((player, index) => (
-      <div key={index} style={styles.listItem}>
-        {player.image && (
-          <img
-            src={player.image}
-            alt={player.name}
-            style={{ width: '50px', height: '50px', borderRadius: '5px' }}
-          />
-        )}
-        <a
-          href={player.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          style={styles.link}
-        >
-          {player.name}
-        </a>
-        <span style={{ marginLeft: 'auto', fontSize: '0.9rem', color: '#555' }}>
-          {player.timeInterval}s
-        </span>
-      </div>
+        <div key={index} style={styles.listItem}>
+            {player.image && (
+                <img
+                    src={player.image}
+                    alt={player.name}
+                    style={{ width: '60px', height: '60px', borderRadius: '50%' }}
+                />
+            )}
+            <a
+                href={player.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={styles.link}
+            >
+                {player.name}
+            </a>
+            <span style={{ marginLeft: 'auto', fontSize: '1rem', color: '#ddd' }}>
+                {player.timeInterval}s
+            </span>
+        </div>
     ));
-  };
+};
 
-  return (
+return (
     <div style={styles.container}>
-      {notification && <div style={styles.notification}>{notification}</div>}
-      <h1 style={{ fontSize: '2.5rem', margin: '20px', color: '#5A5CFF' }}>
-        100 Men & Women Naming Game
-      </h1>
-      <p style={{ fontSize: '1.2rem', color: '#555' }}>Time: {timer}s</p>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
-        <div style={styles.header}>Men: {menCount}/100</div>
-        <div style={styles.header}>Women: {womenCount}/100</div>
-      </div>
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          gap: '20px',
-          alignItems: 'start',
-        }}
-      >
-        <div
-          style={{
-            overflow: 'auto',
-            maxHeight: '300px',
-            border: '1px solid #ccc',
-            padding: '10px',
-            borderRadius: '5px',
-          }}
-          ref={menContainerRef}
-        >
-          {renderList(enteredNames.men)}
-        </div>
-        <div
-          style={{
-            overflow: 'auto',
-            maxHeight: '300px',
-            border: '1px solid #ccc',
-            padding: '10px',
-            borderRadius: '5px',
-          }}
-          ref={womenContainerRef}
-        >
-          {renderList(enteredNames.women)}
-        </div>
-      </div>
 
-      {!isRunning ? (
-        <button
-          onClick={startGame}
-          style={{
-            padding: '10px 20px',
-            fontSize: '1rem',
-            marginTop: '10px',
-            backgroundColor: '#22C55E',
-            color: 'white',
-            borderRadius: '5px',
-            cursor: 'pointer',
-            border: 'none',
-          }}
-        >
-          Start Game
-        </button>
-      ) : (
-        <button
-          onClick={pauseGame}
-          style={{
-            padding: '10px 20px',
-            fontSize: '1rem',
-            marginTop: '10px',
-            backgroundColor: '#EF4444',
-            color: 'white',
-            borderRadius: '5px',
-            cursor: 'pointer',
-            border: 'none',
-          }}
-        >
-          Pause Game
-        </button>
-      )}
-      <form onSubmit={handleSubmit} style={{ marginTop: '20px' }}>
-        <input
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Enter a name"
-          style={{
-            padding: '10px',
-            fontSize: '1rem',
-            width: 'calc(100% - 20px)',
-            borderRadius: '5px',
-            border: '1px solid #ccc',
-            marginBottom: '10px',
-          }}
-        />
-        <button
-          type="submit"
-          style={{
-            padding: '10px 20px',
-            fontSize: '1rem',
-            backgroundColor: '#3B82F6',
-            color: 'white',
-            borderRadius: '5px',
-            cursor: 'pointer',
-            border: 'none',
-          }}
-          disabled={!name.trim() || isRunning === false || pendingNames.includes(name)}
-        >
-          Submit
-        </button>
-      </form>
-      {pendingNames.length > 0 && (
-        <div style={{ marginTop: '10px', color: '#555' }}>
-          Pending: {pendingNames.join(', ')}
+        {notification && <div style={styles.notification}>{notification}</div>}
+  
+        <h1 style={styles.mainHeader}>100 Men & Women Naming Game</h1>
+
+        <p style={{fontFamily: 'Sarpanch, sans serif', fontSize: '1.5rem', color: '#ddd' }}>Time: {timer}s</p>
+
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
+
+            <div style={{...styles.header, marginRight: '220px'}}>Men < br /> {menCount}/100</div>
+
+            <div style={{...styles.header, marginLeft: '120px'}}>Women < br/> {womenCount}/100</div>
+
         </div>
-      )}
-      {/*{timeIntervals.length > 0 && (
-        <div style={{ marginTop: '20px' }}>
-          <h2 style={{ fontSize: '1.2rem', color: '#333' }}>Time Intervals</h2>
-          <div style={{ textAlign: 'center', fontSize: '1rem', color: '#555' }}>
-            {timeIntervals.join('s, ')}s
-          </div>
+        <div
+            style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: '20px',
+                alignItems: 'start',
+            }}
+        >
+            <div
+                style={styles.list}
+                ref={menContainerRef}
+            >
+                {renderList(enteredNames.men)}
+            </div>
+            <div
+                style={styles.list}
+                ref={womenContainerRef}
+            >
+                {renderList(enteredNames.women)}
+            </div>
         </div>
-      )}*/}
+
+        {!isRunning ? (
+            <button
+                onClick={startGame}
+                style={{
+                    padding: '15px 30px',
+                    fontSize: '1.2rem',
+                    marginTop: '20px',
+                    backgroundColor: '#4CAF50',
+                    color: 'white',
+                    borderRadius: '10px',
+                    cursor: 'pointer',
+                    border: 'none',
+                }}
+            >
+                Start Game
+            </button>
+        ) : (
+            <button
+                onClick={pauseGame}
+                style={{
+                    padding: '15px 30px',
+                    fontSize: '1.2rem',
+                    marginTop: '20px',
+                    backgroundColor: '#FF5733',
+                    color: 'white',
+                    borderRadius: '10px',
+                    cursor: 'pointer',
+                    border: 'none',
+                }}
+            >
+                Pause Game
+            </button>
+        )}
+        <form onSubmit={handleSubmit} style={{ marginTop: '30px' }}>
+            <input
+                type="text"
+                value={name}
+                disabled={!isRunning}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Enter a name"
+                style={{
+                    padding: '15px',
+                    fontSize: '1.1rem',
+                    width: 'calc(100% - 30px)',
+                    borderRadius: '10px',
+                    border: '1px solid #ccc',
+                    marginBottom: '20px',
+                }}
+            />
+            <button
+                type="submit"
+                style={{
+                    padding: '15px 30px',
+                    fontSize: '1.1rem',
+                    backgroundColor: '#3498DB',
+                    color: 'white',
+                    borderRadius: '10px',
+                    cursor: 'pointer',
+                    border: 'none',
+                }}
+                disabled={!name.trim() || isRunning === false || pendingNames.includes(name)}
+            >
+                Submit
+            </button>
+        </form>
+        {pendingNames.length > 0 && (
+            <div style={{ marginTop: '15px', color: '#bbb' }}>
+                Pending: {pendingNames.join(', ')}
+            </div>
+        )}
     </div>
-  );
+);
 };
 
 export default App;
