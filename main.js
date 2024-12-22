@@ -8,15 +8,15 @@ app.on('ready', () => {
         width: 800,
         height: 600,
         webPreferences: {
-            nodeIntegration: false, 
-            contextIsolation: true   
+            nodeIntegration: false,  // Recommended for security reasons
+            contextIsolation: true   // Important for security as well
         },
     });
 
-    
+    // Ensure the path to the 'index.html' is correct (production build)
     mainWindow.loadFile(path.join(__dirname, 'build', 'index.html'));
 
-   
+    // Open DevTools for debugging (optional)
     mainWindow.webContents.openDevTools();
 
     mainWindow.on('closed', () => {
