@@ -654,18 +654,23 @@ return (
   value={name}
   onChange={(e) => setName(e.target.value)}
   onFocus={(e) => {
-    e.target.scrollIntoView({ behavior: 'smooth', block: 'center' }); // Scroll input into view
+    if (!isRunning) return; // Prevent scroll and focus if the game is not running
+    e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }}
-  placeholder="Enter a name"
+  placeholder={isRunning ? "Enter a name" : "Start the game to enter names"}
   style={{
     padding: '10px',
     fontSize: '1rem',
-    width: '50%',
+    width: isMobile ? '80%' : '50%', // Adjust width for mobile
     borderRadius: '5px',
     border: '1px solid #ccc',
     marginBottom: '10px',
+    backgroundColor: isRunning ? 'white' : '#f2f2f2', // Gray background when disabled
+    color: isRunning ? '#000' : '#888', // Dimmed text when disabled
   }}
+  disabled={!isRunning} // Disable input when the game is not running
 />
+
 
           <div style={{ textAlign: 'center' }}>
             <button
