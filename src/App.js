@@ -2,7 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import PlayerList from './PlayerList';
 import useWindowSize from './useWindowSize';
 import { isMobile } from 'react-device-detect';
-
+import { saveSession } from './SessionStorage';
+import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import ArchivedSessions from './ArchivedSessions';
 
 const App = () => {
   const [showLandingPage, setShowLandingPage] = useState(true);
@@ -20,15 +22,47 @@ const App = () => {
   const [showPauseConfirm, setShowPauseConfirm] = useState(false);
   const [width] = useWindowSize();
   const [currentList, setCurrentList] = useState('men');
-
-
-
+  const [archivedSessions, setArchivedSessions] = useState([]);
   const handleGetStarted = () => {
-    setIsFadingOut(true); // Trigger the fade-out effect
-    setTimeout(() => {
-      setShowLandingPage(false); // Hide landing page after fade-out animation
-      setIsFadingOut(false); // Reset fade-out state
-    }, 1500); // Match the duration of the CSS fade-out animation
+    // Logic to transition from the landing page to the game interface
+    setShowLandingPage(false);
+    setIsRunning(true); // Start the game when transitioning
+  };
+  
+  
+
+  const calculateTotalTime = (gender) => {
+    const times = enteredNames[gender]?.map((player) => parseFloat(player.timeInterval)) || [];
+    return times.reduce((acc, time) => acc + time, 0).toFixed(3); // Sum up intervals
+  };
+
+  const handleSaveResults = () => {
+    const isComplete = menCount === 100 && womenCount === 100;
+    const confirmationMessage = isComplete
+      ? 'The session is complete. Save results by entering your name below:'
+      : 'The session is incomplete. Enter your name to save anyway:';
+  
+    // Trigger notification-style input prompt
+    showNotification(confirmationMessage, (playerName) => {
+      if (typeof playerName !== 'string' || playerName.trim() === '') {
+        showNotification('Save canceled. A name is required to save the session.');
+        return;
+      }
+  
+      const session = {
+        playerName: playerName.trim(),
+        date: new Date().toLocaleString(),
+        men: enteredNames.men,
+        women: enteredNames.women,
+        totalTime: timer, // Total time for the game
+        menTime: calculateTotalTime('men'),
+        womenTime: calculateTotalTime('women'),
+        isComplete,
+      };
+  
+      saveSession(session);
+      showNotification(`Results saved successfully for ${playerName.trim()}${isComplete ? '!' : ' (incomplete session).'}`);
+    });
   };
 
 
@@ -59,10 +93,52 @@ const App = () => {
   const menContainerRef = useRef(null);
   const womenContainerRef = useRef(null);
 
-  const showNotification = (message) => {
-    setNotification(message);
-    setTimeout(() => setNotification(null), 3000);
+  const showNotification = (message, callback = () => {}) => {
+    const notificationContainer = document.createElement('div');
+    notificationContainer.style.position = 'fixed';
+    notificationContainer.style.top = '20%';
+    notificationContainer.style.left = '50%';
+    notificationContainer.style.transform = 'translate(-50%, -20%)';
+    notificationContainer.style.background = 'white';
+    notificationContainer.style.padding = '20px';
+    notificationContainer.style.borderRadius = '10px';
+    notificationContainer.style.boxShadow = '0 4px 10px rgba(0, 0, 0, 0.2)';
+    notificationContainer.style.zIndex = '1000';
+    notificationContainer.style.textAlign = 'center';
+  
+    const messageText = document.createElement('p');
+    messageText.textContent = message;
+    notificationContainer.appendChild(messageText);
+  
+    const inputField = document.createElement('input');
+    inputField.type = 'text';
+    inputField.placeholder = 'Enter your name';
+    inputField.style.margin = '10px 0';
+    inputField.style.padding = '10px';
+    inputField.style.width = '80%';
+    inputField.style.border = '1px solid #ccc';
+    inputField.style.borderRadius = '5px';
+    notificationContainer.appendChild(inputField);
+  
+    const confirmButton = document.createElement('button');
+    confirmButton.textContent = 'Save';
+    confirmButton.style.padding = '10px 20px';
+    confirmButton.style.backgroundColor = '#2ecc71';
+    confirmButton.style.color = 'white';
+    confirmButton.style.border = 'none';
+    confirmButton.style.borderRadius = '5px';
+    confirmButton.style.cursor = 'pointer';
+  
+    confirmButton.onclick = () => {
+      callback(inputField.value); // Callback is always a valid function now
+      document.body.removeChild(notificationContainer);
+    };
+  
+    notificationContainer.appendChild(confirmButton);
+    document.body.appendChild(notificationContainer);
   };
+  
+  
   
   useEffect(() => {
     let originalHeight = window.innerHeight;
@@ -448,306 +524,365 @@ const renderList = (players) => {
 };
 
 return (
-  <div>
-    {showLandingPage ? (
-      <div
-        className={`fade-in ${isFadingOut ? 'fade-out' : ''}`}
-        style={{ textAlign: 'center', marginTop: '20%', color: '#fff', transition: 'opacity 1s ease-in-out', opacity: showLandingPage ? 1 : 0 }}
-      >
-        <div
-          style={{
-            display: 'inline-block',
-            backgroundColor: 'rgba(0, 0, 0, 0.6)', // Black with low opacity
-            padding: '20px',
-            borderRadius: '10px',
-          }}
-        >
-          <h1
-            style={{
-              fontSize: '4rem',
-              fontWeight: '600',
-              textShadow: '0 4px 15px rgba(0, 0, 0, 0.4)',
-              margin: '0',
-            }}
-          >
-            Welcome to The Name Game
-          </h1>
-        </div>
-        <div style={{ marginTop: '20px' }}>
-          <button
-            onClick={() => setTimeout(() => setShowLandingPage(false), 1000)}
-            style={{
-              padding: '15px 40px',
-              fontSize: '1.5rem',
-              background: 'linear-gradient(45deg, #ff7e5f, #feb47b)',
-              color: 'white',
-              border: 'none',
-              borderRadius: '50px',
-              cursor: 'pointer',
-              boxShadow: '0 4px 15px rgba(255, 126, 95, 0.5)',
-            }}
-          >
-            Get Started
-          </button>
-        </div>
-      </div>
-    ) : (
-      <div style={styles.container}>
-        {notification && <div style={styles.notification}>{notification}</div>}
+  <Router>
+    <Routes>
+      <Route
+        path="/"
+        element={
+          showLandingPage ? (
+            <div
+              className={`fade-in ${isFadingOut ? 'fade-out' : ''}`}
+              style={{
+                textAlign: 'center',
+                marginTop: '20%',
+                color: '#fff',
+                transition: 'opacity 1s ease-in-out',
+                opacity: showLandingPage ? 1 : 0,
+              }}
+            >
+              <div
+                style={{
+                  display: 'inline-block',
+                  backgroundColor: 'rgba(0, 0, 0, 0.6)',
+                  padding: '20px',
+                  borderRadius: '10px',
+                }}
+              >
+                <h1
+                  style={{
+                    fontSize: '4rem',
+                    fontWeight: '600',
+                    textShadow: '0 4px 15px rgba(0, 0, 0, 0.4)',
+                    margin: '0',
+                  }}
+                >
+                  Welcome to The Name Game
+                </h1>
+              </div>
+              <div style={{ marginTop: '20px' }}>
+                <button
+                  onClick={handleGetStarted}
+                  style={{
+                    padding: '15px 40px',
+                    fontSize: '1.5rem',
+                    background: 'linear-gradient(45deg, #ff7e5f, #feb47b)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '50px',
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 15px rgba(255, 126, 95, 0.5)',
+                  }}
+                >
+                  Get Started
+                </button>
+                <button
+                  style={{
+                    padding: '10px 30px',
+                    marginLeft: '15px',
+                    backgroundColor: '#2ecc71',
+                    color: 'white',
+                    borderRadius: '10px',
+                    border: 'none',
+                    fontSize: '1.2rem',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <Link to="/archives" style={{ color: 'white', textDecoration: 'none' }}>
+                    View Archived Sessions
+                  </Link>
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div style={styles.container}>
+              {/* Game Content */}
+              {notification && <div style={styles.notification}>{notification}</div>}
 
-        <h1 style={styles.mainHeader}>
-  {isMobile ? '100MW' : '100 Men & Women Naming Game'}
-</h1>
+              <h1 style={styles.mainHeader}>
+                {isMobile ? '100MW' : '100 Men & Women Naming Game'}
+              </h1>
 
-        <p style={{ fontFamily: 'Sarpanch, sans-serif', fontSize: '1.5rem', color: '#ddd' }}>Time: {timer}s</p>
+              <p style={{ fontFamily: 'Sarpanch, sans-serif', fontSize: '1.5rem', color: '#ddd' }}>
+                Time: {timer}s
+              </p>
 
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
-  {isMobile ? (
-    <div style={styles.header}>
-      {currentList === 'men' ? 'Men' : 'Women'}
-      <br />
-      {currentList === 'men' ? menCount : womenCount}/100
-    </div>
-  ) : (
-    <>
-      <div style={{ ...styles.header, marginRight: '120px' }}>
-        Men
-        <br /> {menCount}/100
-      </div>
-      <div style={{ ...styles.header, marginLeft: '120px' }}>
-        Women
-        <br /> {womenCount}/100
-      </div>
-    </>
-  )}
-</div>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
+                {isMobile ? (
+                  <div style={styles.header}>
+                    {currentList === 'men' ? 'Men' : 'Women'}
+                    <br />
+                    {currentList === 'men' ? menCount : womenCount}/100
+                  </div>
+                ) : (
+                  <>
+                    <div style={{ ...styles.header, marginRight: '120px' }}>
+                      Men
+                      <br /> {menCount}/100
+                    </div>
+                    <div style={{ ...styles.header, marginLeft: '120px' }}>
+                      Women
+                      <br /> {womenCount}/100
+                    </div>
+                  </>
+                )}
+              </div>
 
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: isMobile ? 'column' : 'row',
+                  gap: '20px',
+                  alignItems: 'stretch',
+                  justifyContent: 'center',
+                  padding: '10px',
+                }}
+              >
+                {isMobile ? (
+                  <>
+                    <button
+                      onClick={() => setCurrentList((prev) => (prev === 'men' ? 'women' : 'men'))}
+                      style={{
+                        padding: '10px 20px',
+                        fontSize: '1rem',
+                        backgroundColor: '#22C55E',
+                        color: 'white',
+                        borderRadius: '5px',
+                        cursor: 'pointer',
+                        border: 'none',
+                        marginBottom: '10px',
+                      }}
+                    >
+                      Toggle to {currentList === 'men' ? 'Women' : 'Men'}
+                    </button>
 
-        <div
+                    <div
+                      style={{
+                        overflowY: 'auto',
+                        height: isMobile ? '100px' : '200px',
+                        width: '90%',
+                        maxWidth: '330px',
+                        minWidth: '280px',
+                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                        padding: '10px',
+                        borderRadius: '5px',
+                      }}
+                      className="scroll-container"
+                      ref={currentList === 'men' ? menContainerRef : womenContainerRef}
+                    >
+                      {renderList(currentList === 'men' ? enteredNames.men : enteredNames.women)}
+                    </div>
+                  </>
+                ) : (
+                  <div style={{ display: 'flex', gap: '20px' }}>
+                    <div
+                      style={{
+                        overflowY: 'auto',
+                        height: isMobile ? '100px' : '200px',
+                        width: '500px',
+                        maxWidth: '600px',
+                        minWidth: '280px',
+                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                        padding: '10px',
+                        borderRadius: '5px',
+                      }}
+                      className="scroll-container"
+                      ref={menContainerRef}
+                    >
+                      {renderList(enteredNames.men)}
+                    </div>
+
+                    <div
+                      style={{
+                        overflowY: 'auto',
+                        height: '200px',
+                        width: '500px',
+                        maxWidth: '600px',
+                        minWidth: '280px',
+                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                        padding: '10px',
+                        borderRadius: '5px',
+                      }}
+                      className="scroll-container"
+                      ref={womenContainerRef}
+                    >
+                      {renderList(enteredNames.women)}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {!isRunning ? (
+                <button
+                  onClick={startGame}
+                  style={{
+                    padding: '10px 20px',
+                    fontSize: '1rem',
+                    backgroundColor: '#22C55E',
+                    color: 'white',
+                    borderRadius: '5px',
+                    cursor: 'pointer',
+                    border: 'none',
+                    width: '90%',
+                    maxWidth: '150px',
+                  }}
+                >
+                  Start Game
+                </button>
+              ) : (
+                <button
+                  onClick={pauseGame}
+                  style={{
+                    padding: '10px 20px',
+                    fontSize: '1rem',
+                    backgroundColor: '#EF4444',
+                    color: 'white',
+                    borderRadius: '5px',
+                    cursor: 'pointer',
+                    border: 'none',
+                    width: '90%',
+                    maxWidth: '300px',
+                  }}
+                >
+                  Pause Game
+                </button>
+              )}
+
+              <form onSubmit={handleSubmit} style={{ marginTop: '30px' }}>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  onFocus={(e) => {
+                    if (!isRunning) return;
+                    e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  }}
+                  placeholder={isRunning ? 'Enter a name' : 'Start the game to enter names'}
+                  style={{
+                    padding: '10px',
+                    fontSize: '1rem',
+                    width: isMobile ? '80%' : '50%',
+                    borderRadius: '5px',
+                    border: '1px solid #ccc',
+                    marginBottom: '10px',
+                    backgroundColor: isRunning ? 'white' : '#f2f2f2',
+                    color: isRunning ? '#000' : '#888',
+                  }}
+                  disabled={!isRunning}
+                />
+
+                <div style={{ textAlign: 'center' }}>
+                  <button
+                    type="submit"
+                    style={{
+                      padding: '15px 30px',
+                      fontSize: '1.1rem',
+                      backgroundColor: '#3498DB',
+                      color: 'white',
+                      borderRadius: '10px',
+                      cursor: 'pointer',
+                      border: 'none',
+                    }}
+                    disabled={!name.trim() || !isRunning || pendingNames.includes(name)}
+                  >
+                    Submit
+                  </button>
+
+                  <button
+  onClick={() => handleSaveResults()} // Call function to save results
   style={{
-    display: 'flex',
-    flexDirection: isMobile ? 'column' : 'row',
-    gap: '20px',
-    alignItems: 'stretch',
-    justifyContent: 'center',
-    padding: '10px',
+    marginLeft: '10px',
+    padding: '15px 30px',
+    fontSize: '1.1rem',
+    backgroundColor: menCount === 100 && womenCount === 100 ? '#2ecc71' : '#ffcc00', // Green for complete, yellow for incomplete
+    color: 'white',
+    borderRadius: '10px',
+    cursor: 'pointer', // Always clickable
+    border: 'none',
   }}
 >
-{isMobile ? (
-  <>
-    {/* Toggle Button */}
-    <button
-      onClick={() => setCurrentList((prev) => (prev === 'men' ? 'women' : 'men'))}
-      style={{
-        padding: '10px 20px',
-        fontSize: '1rem',
-        backgroundColor: '#22C55E',
-        color: 'white',
-        borderRadius: '5px',
-        cursor: 'pointer',
-        border: 'none',
-        marginBottom: '10px',
-      }}
-    >
-    
-      Toggle to {currentList === 'men' ? 'Women' : 'Men'}
-    </button>
-
-    {/* Display the selected list */}
-    <div
-      style={{
-        overflowY: 'auto',
-        height: isMobile?'100px':'200px',
-        width: '90%',
-        maxWidth: '330px',
-        minWidth: '280px',
-        border: '1px solid rgba(255, 255, 255, 0.2)',
-        padding: '10px',
-        borderRadius: '5px',
-      }}
-      className="scroll-container"
-      ref={currentList === 'men' ? menContainerRef : womenContainerRef}
-    >
-      {renderList(currentList === 'men' ? enteredNames.men : enteredNames.women)}
-    </div>
-  </>
-) : (
-  <div style={{ display: 'flex', gap: '20px' }}>
-    {/* Men List */}
-    <div
-      style={{
-        overflowY: 'auto',
-        height: isMobile?'100px':'200px',
-        width: '500px',
-        maxWidth: '600px',
-        minWidth: '280px',
-        border: '1px solid rgba(255, 255, 255, 0.2)',
-        padding: '10px',
-        borderRadius: '5px',
-      }}
-      className="scroll-container"
-      ref={menContainerRef}
-    >
-      {renderList(enteredNames.men)}
-    </div>
-
-    {/* Women List */}
-    <div
-      style={{
-        overflowY: 'auto',
-        height: '200px',
-        width: '500px',
-        maxWidth: '600px',
-        minWidth: '280px',
-        border: '1px solid rgba(255, 255, 255, 0.2)',
-        padding: '10px',
-        borderRadius: '5px',
-      }}
-      className="scroll-container"
-      ref={womenContainerRef}
-    >
-      {renderList(enteredNames.women)}
-    </div>
-  </div>
-)}
-
-        </div>
-
-        {!isRunning ? (
-          <button
-          onClick={startGame}
-          style={{
-            padding: '10px 20px',
-            fontSize: '1rem',
-            backgroundColor: '#22C55E',
-            color: 'white',
-            borderRadius: '5px',
-            cursor: 'pointer',
-            border: 'none',
-            width: '90%', // Ensure it scales on mobile
-            maxWidth: '150px',
-          }}
-        >
-          Start Game
-        </button>
-      ) : (
-        <button
-          onClick={pauseGame}
-          style={{
-            padding: '10px 20px',
-            fontSize: '1rem',
-            backgroundColor: '#EF4444',
-            color: 'white',
-            borderRadius: '5px',
-            cursor: 'pointer',
-            border: 'none',
-            width: '90%',
-            maxWidth: '300px',
-          }}
-        >
-          Pause Game
-        </button>
-      )}
-        
-        <form onSubmit={handleSubmit} style={{ marginTop: '30px' }}>
-        <input
-  type="text"
-  value={name}
-  onChange={(e) => setName(e.target.value)}
-  onFocus={(e) => {
-    if (!isRunning) return; // Prevent scroll and focus if the game is not running
-    e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }}
-  placeholder={isRunning ? "Enter a name" : "Start the game to enter names"}
+  {menCount === 100 && womenCount === 100 ? 'Save Results' : 'Save Incomplete Results'}
+</button>
+<button
+  onClick={() => window.location.href = '/'} // Navigate to home page
   style={{
-    padding: '10px',
-    fontSize: '1rem',
-    width: isMobile ? '80%' : '50%', // Adjust width for mobile
-    borderRadius: '5px',
-    border: '1px solid #ccc',
-    marginBottom: '10px',
-    backgroundColor: isRunning ? 'white' : '#f2f2f2', // Gray background when disabled
-    color: isRunning ? '#000' : '#888', // Dimmed text when disabled
+    marginLeft: '10px',
+    padding: '15px 30px',
+    fontSize: '1.1rem',
+    backgroundColor: '#3498db', // Blue for home button
+    color: 'white',
+    borderRadius: '10px',
+    cursor: 'pointer', // Always clickable
+    border: 'none',
   }}
-  disabled={!isRunning} // Disable input when the game is not running
-/>
+>
+  Home
+</button>
+                </div>
+              </form>
 
+              {pendingNames.length > 0 && (
+                <div style={{ marginTop: '15px', color: '#bbb' }}>
+                  Pending: {pendingNames.join(', ')}
+                </div>
+              )}
 
-          <div style={{ textAlign: 'center' }}>
-            <button
-              type="submit"
-              style={{
-                padding: '15px 30px',
-                fontSize: '1.1rem',
-                backgroundColor: '#3498DB',
-                color: 'white',
-                borderRadius: '10px',
-                cursor: 'pointer',
-                border: 'none',
-              }}
-              disabled={!name.trim() || isRunning === false || pendingNames.includes(name)}
-            >
-              Submit
-            </button>
-          </div>
-        </form>
-        {pendingNames.length > 0 && (
-          <div style={{ marginTop: '15px', color: '#bbb' }}>Pending: {pendingNames.join(', ')}</div>
-        )}
-      </div>
-    )}
+              {/* Confirmation Modal */}
+              {showPauseConfirm && (
+                <div
+                  style={{
+                    position: 'fixed',
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    backgroundColor: 'white',
+                    color: 'black',
+                    padding: '20px',
+                    borderRadius: '10px',
+                    boxShadow: '0 4px 10px rgba(0, 0, 0, 0.2)',
+                    zIndex: 1000,
+                  }}
+                >
+                  <p>Are you sure you want to pause and reset the game?</p>
+                  <div style={{ display: 'flex', justifyContent: 'center', gap: '10px' }}>
+                    <button
+                      onClick={confirmPause}
+                      style={{
+                        padding: '10px 20px',
+                        backgroundColor: '#4CAF50',
+                        color: 'white',
+                        borderRadius: '5px',
+                        border: 'none',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      Yes
+                    </button>
+                    <button
+                      onClick={cancelPause}
+                      style={{
+                        padding: '10px 20px',
+                        backgroundColor: '#FF5252',
+                        color: 'white',
+                        borderRadius: '5px',
+                        border: 'none',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      No
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )
+        }
+      />
 
-    {/* Render the Confirmation Modal */}
-    {showPauseConfirm && (
-      <div
-        style={{
-          position: 'fixed',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          backgroundColor: 'rgba(0, 0, 0, 0.8)',
-          padding: '20px',
-          borderRadius: '10px',
-          color: '#fff',
-          zIndex: 1000,
-          textAlign: 'center',
-        }}
-      >
-        <p>Are you sure you want to pause and reset the game?</p>
-        <button
-          onClick={confirmPause}
-          style={{
-            marginRight: '10px',
-            padding: '10px 20px',
-            backgroundColor: '#ff5733',
-            color: '#fff',
-            border: 'none',
-            borderRadius: '5px',
-            cursor: 'pointer',
-          }}
-        >
-          Yes
-        </button>
-        <button
-          onClick={cancelPause}
-          style={{
-            padding: '10px 20px',
-            backgroundColor: '#4CAF50',
-            color: '#fff',
-            border: 'none',
-            borderRadius: '5px',
-            cursor: 'pointer',
-          }}
-        >
-          No
-        </button>
-      </div>
-    )}
-  </div>
+      {/* Archived Sessions */}
+      <Route path="/archives" element={<ArchivedSessions />} />
+    </Routes>
+  </Router>
 );
-
-
-
 
 
 };
