@@ -76,16 +76,15 @@
   }
 }
 
-
+/* For WebKit-based browsers (Chrome, Safari, Edge) */
 .scroll-container {
   overflow-y: auto;
-  max-height: 100%; 
-  border: 1px solid rgba(255, 255, 255, 0.2); 
+  max-height: 300px; /* Fixed height */
+  border: 1px solid rgba(255, 255, 255, 0.2); /* Optional sleek border */
   padding: 10px;
   border-radius: 5px;
-  scrollbar-width: thin; 
-  scrollbar-color: rgba(255, 255, 255, 0.2) transparent; 
-  -webkit-overflow-scrolling: touch; 
+  scrollbar-width: thin; /* Firefox-specific */
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent; /* Firefox-specific */
 }
 
 .scroll-container::-webkit-scrollbar {
