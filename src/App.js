@@ -18,6 +18,8 @@ const App = () => {
   const [showGame, setShowGame] = useState(false);
   const [showPauseConfirm, setShowPauseConfirm] = useState(false);
   const [width] = useWindowSize();
+  const isMobile = width / window.devicePixelRatio <= 480; 
+
 
 
   const handleGetStarted = () => {
@@ -277,19 +279,23 @@ const App = () => {
     
    
     
-  container: {
-    height: '720px',
-    textAlign: 'center',
-    padding: '20px',
-    fontFamily: 'Roboto, Arial, sans-serif',
-    color: '#fff',
-    background: 'rgba(0, 0, 0, 0.7)',
-    borderRadius: '10px',
-    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
-    backdropFilter: 'blur(10px)',
-    maxWidth: '100%', // Ensure it fits within the screen
-    margin: 'auto',
-  },
+    container: {
+      height: '720px', 
+      minHeight: '600px', 
+      maxHeight: '90vh', 
+      width: '100%', 
+      maxWidth: isMobile ? '600px' : '1200px' ,
+      minWidth: '300px', 
+      textAlign: 'center',
+      padding: '20px',
+      fontFamily: 'Roboto, Arial, sans-serif',
+      color: '#fff',
+      background: 'rgba(0, 0, 0, 0.7)',
+      borderRadius: '10px',
+      boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+      backdropFilter: 'blur(10px)',
+      margin: '20px auto',
+    },
   
   mainHeader: {
     fontSize: '3rem',
@@ -486,13 +492,15 @@ return (
 <div
     style={{
       overflowY: 'auto',
-      height: '200px',
-      width: width <= 768 ? '100%' : '45%',
-      border: '1px solid rgba(255, 255, 255, 0.2)', /* Optional sleek border */
-      padding: '10px',
-      borderRadius: '5px',
-      scrollbarWidth: 'thin', /* Firefox-specific */
-      scrollbarColor: 'rgba(255, 255, 255, 0.2) transparent', /* Firefox-specific */
+    height: '200px',
+    width: width <= 768 ? '90%' : 'calc(50% - 20px)', // More precise responsive logic
+    maxWidth: '600px', // Limit maximum width for high-res displays
+    minWidth: '280px', // Minimum width to ensure usability
+    border: '1px solid rgba(255, 255, 255, 0.2)', // Optional sleek border
+    padding: '10px',
+    borderRadius: '5px',
+    scrollbarWidth: 'thin', // Firefox-specific
+    scrollbarColor: 'rgba(255, 255, 255, 0.2) transparent', /* Firefox-specific */
     }}
     className="scroll-container" /* Add className for additional styling */
     ref={menContainerRef}
@@ -500,15 +508,18 @@ return (
     {renderList(enteredNames.men)}
   </div>
   <div
-    style={{
+     style={{
       overflowY: 'auto',
       height: '200px',
-      width: width <= 768 ? '100%' : '45%',
-      border: '1px solid rgba(255, 255, 255, 0.2)', /* Optional sleek border */
+      width: width <= 768 ? '90%' : 'calc(50% - 20px)', // More precise responsive logic
+      maxWidth: '600px', // Limit maximum width for high-res displays
+      minWidth: '280px', // Minimum width to ensure usability
+      border: '1px solid rgba(255, 255, 255, 0.2)', // Optional sleek border
       padding: '10px',
       borderRadius: '5px',
-      scrollbarWidth: 'thin', /* Firefox-specific */
-      scrollbarColor: 'rgba(255, 255, 255, 0.2) transparent', /* Firefox-specific */
+      scrollbarWidth: 'thin', // Firefox-specific
+      scrollbarColor: 'rgba(255, 255, 255, 0.2) transparent', // Firefox-specific
+   
     }}
     className="scroll-container" /* Add className for additional styling */
     ref={womenContainerRef}
