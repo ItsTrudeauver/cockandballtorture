@@ -273,18 +273,22 @@ const App = () => {
   const styles = {
     
     
-    container: {
-      height: '720px',
-      textAlign: 'center',
-      padding: '20px',
-      fontFamily: 'Roboto, Arial, sans-serif',
-      color: '#fff',
-      background: 'rgba(0, 0, 0, 0.7)',
-      borderRadius: '15px',
-      backdropFilter: 'blur(10px)',
-      maxWidth: '900px',
-      margin: 'auto',
+   
+    
+  container: {
+    height: '720px',
+    textAlign: 'center',
+    padding: '20px',
+    fontFamily: 'Roboto, Arial, sans-serif',
+    color: '#fff',
+    background: 'rgba(0, 0, 0, 0.7)',
+    borderRadius: '10px',
+    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+    backdropFilter: 'blur(10px)',
+    maxWidth: '100%', // Ensure it fits within the screen
+    margin: 'auto',
   },
+  
   mainHeader: {
     fontSize: '3rem',
     fontFamily: 'Audiowide, sans serif',
@@ -517,21 +521,21 @@ return (
           </button>
         )}
         <form onSubmit={handleSubmit} style={{ marginTop: '30px' }}>
-          <input
-            type="text"
-            value={name}
-            disabled={!isRunning}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Enter a name"
-            style={{
-              padding: '15px',
-              fontSize: '1.1rem',
-              width: 'calc(100% - 30px)',
-              borderRadius: '10px',
-              border: '1px solid #ccc',
-              marginBottom: '20px',
-            }}
-          />
+        <input
+  type="text"
+  value={name}
+  onChange={(e) => setName(e.target.value)}
+  disabled = {!isRunning}
+  placeholder="Enter a name"
+  style={{
+    padding: '10px',
+    fontSize: '1rem',
+    width: '100%', // Make input full width
+    borderRadius: '5px',
+    border: '1px solid #ccc',
+    marginBottom: '10px',
+  }}
+/>
           <div style={{ textAlign: 'center' }}>
             <button
               type="submit"
