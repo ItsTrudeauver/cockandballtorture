@@ -285,7 +285,7 @@ const App = () => {
       minHeight: '450px', 
       maxHeight: '90vh', 
       width: '100%', 
-      maxWidth: isMobile ? '450px' : '1200px' ,
+      maxWidth: isMobile ? '370px' : '1200px' ,
       minWidth: '300px', 
       textAlign: 'center',
       padding: '20px',
@@ -526,9 +526,9 @@ return (
     <div
       style={{
         overflowY: 'auto',
-        height: '200px',
+        height: isMobile?'100px':'200px',
         width: '90%',
-        maxWidth: '450px',
+        maxWidth: '350px',
         minWidth: '280px',
         border: '1px solid rgba(255, 255, 255, 0.2)',
         padding: '10px',
@@ -546,9 +546,9 @@ return (
     <div
       style={{
         overflowY: 'auto',
-        height: '200px',
-        width: 'calc(50% - 20px)',
-        maxWidth: '450px',
+        height: isMobile?'100px':'200px',
+        width: '500px',
+        maxWidth: '600px',
         minWidth: '280px',
         border: '1px solid rgba(255, 255, 255, 0.2)',
         padding: '10px',
@@ -565,8 +565,8 @@ return (
       style={{
         overflowY: 'auto',
         height: '200px',
-        width: 'calc(50% - 20px)',
-        maxWidth: '450px',
+        width: '500px',
+        maxWidth: '600px',
         minWidth: '280px',
         border: '1px solid rgba(255, 255, 255, 0.2)',
         padding: '10px',
