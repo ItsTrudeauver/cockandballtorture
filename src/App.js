@@ -65,16 +65,18 @@ const App = () => {
   };
   
   useEffect(() => {
-    let originalHeight = window.innerHeight;
+    const originalHeight = window.innerHeight;
   
     const handleResize = () => {
       const currentHeight = window.innerHeight;
-      const keyboardVisible = currentHeight < originalHeight; // Detect keyboard visibility
+      const keyboardVisible = currentHeight < originalHeight;
   
+      const appContainer = document.getElementById('root'); // Target your main container
       if (keyboardVisible) {
-        document.body.style.setProperty('margin-bottom', `${originalHeight - currentHeight}px`);
+        const availableHeight = currentHeight; // Height available after keyboard pops up
+        appContainer.style.height = `${availableHeight}px`; // Set container height
       } else {
-        document.body.style.setProperty('margin-bottom', '0px'); // Reset margin
+        appContainer.style.height = '100%'; // Reset to full height when keyboard is hidden
       }
     };
   
@@ -651,19 +653,19 @@ return (
         <form onSubmit={handleSubmit} style={{ marginTop: '30px' }}>
         <input
   type="text"
-  value={name}
-  onChange={(e) => setName(e.target.value)}
-  onFocus={(e) => {
-    e.target.scrollIntoView({ behavior: 'smooth', block: 'center' }); // Scroll input into view
+      value={name}
+      onChange={(e) => setName(e.target.value)}
+      onFocus={(e) => {
+      e.target.scrollIntoView({ behavior: 'smooth', block: 'center' }); 
   }}
-  placeholder="Enter a name"
-  style={{
-    padding: '10px',
-    fontSize: '1rem',
-    width: '50%',
-    borderRadius: '5px',
-    border: '1px solid #ccc',
-    marginBottom: '10px',
+    placeholder="Enter a name"
+    style={{
+     padding: '10px',
+      fontSize: '1rem',
+      width: '50%',
+      borderRadius: '5px',
+      border: '1px solid #ccc',
+      marginBottom: '10px',
   }}
 />
 
