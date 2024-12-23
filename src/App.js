@@ -65,6 +65,17 @@ const App = () => {
   };
 
   useEffect(() => {
+    const setViewportHeight = () => {
+      const vh = window.innerHeight * 0.01; // 1% of the viewport height
+      document.documentElement.style.setProperty('--vh', `${vh}px`);
+    };
+  
+    setViewportHeight();
+    window.addEventListener('resize', setViewportHeight); // Adjust on resize
+    return () => window.removeEventListener('resize', setViewportHeight);
+  }, []);
+
+  useEffect(() => {
     if (isRunning) {
       const interval = setInterval(() => setTimer((t) => t + 1), 1000);
       return () => clearInterval(interval);
@@ -281,11 +292,11 @@ const App = () => {
    
     
     container: {
-      height: '720px', 
+      height: 'calc(var(--vh, 1vh) * 100)',
       minHeight: '450px', 
       maxHeight: '90vh', 
       width: '100%', 
-      maxWidth: isMobile ? '370px' : '1200px' ,
+      maxWidth: isMobile ? '330px' : '1200px' ,
       minWidth: '300px', 
       textAlign: 'center',
       padding: '20px',
@@ -528,7 +539,7 @@ return (
         overflowY: 'auto',
         height: isMobile?'100px':'200px',
         width: '90%',
-        maxWidth: '350px',
+        maxWidth: '330px',
         minWidth: '280px',
         border: '1px solid rgba(255, 255, 255, 0.2)',
         padding: '10px',
