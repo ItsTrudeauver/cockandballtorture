@@ -398,7 +398,7 @@ const App = () => {
     }
     lastCorrectTime.current = currentTime;
   
-    // Add to the appropriate list
+   
     if (validation.gender === 'male' && menCount < 100) {
       setMenCount((c) => c + 1);
       setEnteredNames((prev) => ({ ...prev, men: [...prev.men, validation] }));
@@ -410,7 +410,7 @@ const App = () => {
       return;
     }
   
-    // Stop timer when both counts reach 100
+    
     if (menCount + 1 === 100 && womenCount === 100) {
       setIsRunning(false);
       showNotification('Both men and women counts have reached 100. Timer stopped!');
