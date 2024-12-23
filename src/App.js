@@ -486,50 +486,74 @@ return (
 
         <div
   style={{
-    display: width <= 768 ? 'flex' : 'grid',
+    display: 'flex',
     flexDirection: width <= 768 ? 'column' : 'row',
     gap: '20px',
-    alignItems: 'start',
+    alignItems: 'stretch',
+    justifyContent: 'center',
+    padding: '10px',
   }}
 >
-          <div style={styles.list} ref={menContainerRef}>
+<div
+    style={{
+      overflow: 'auto',
+      maxHeight: '50vh',
+      width: width <= 768 ? '100%' : '45%',
+      border: '1px solid #ccc',
+      padding: '10px',
+      borderRadius: '5px',
+    }} ref={menContainerRef}>
             {renderList(enteredNames.men)}
           </div>
-          <div style={styles.list} ref={womenContainerRef}>
+          <div
+    style={{
+      overflow: 'auto',
+      maxHeight: '50vh',
+      width: width <= 768 ? '100%' : '45%',
+      border: '1px solid #ccc',
+      padding: '10px',
+      borderRadius: '5px',
+    }} ref={womenContainerRef}>
             {renderList(enteredNames.women)}
           </div>
         </div>
 
         {!isRunning ? (
           <button
-            onClick={startGame}
-            style={{
-              overflow: 'auto',
-              maxHeight: '50vh', // Adjust height dynamically
-              width: '100%',    // Ensure the list takes full width on small screens
-              border: '1px solid #ccc',
-              padding: '10px',
-              borderRadius: '5px',
-            }}
-          >
-            Start Game
-          </button>
-        ) : (
-          <button
-            onClick={pauseGame}
-            style={{
-              overflow: 'auto',
-              maxHeight: '50vh',
-              width: '100%',
-              border: '1px solid #ccc',
-              padding: '10px',
-              borderRadius: '5px',
-            }}
+          onClick={startGame}
+          style={{
+            padding: '10px 20px',
+            fontSize: '1rem',
+            backgroundColor: '#22C55E',
+            color: 'white',
+            borderRadius: '5px',
+            cursor: 'pointer',
+            border: 'none',
+            width: '90%', // Ensure it scales on mobile
+            maxWidth: '300px',
+          }}
+        >
+          Start Game
+        </button>
+      ) : (
+        <button
+          onClick={pauseGame}
+          style={{
+            padding: '10px 20px',
+            fontSize: '1rem',
+            backgroundColor: '#EF4444',
+            color: 'white',
+            borderRadius: '5px',
+            cursor: 'pointer',
+            border: 'none',
+            width: '90%',
+            maxWidth: '300px',
+          }}
+        >
+          Pause Game
+        </button>
+      )}
         
-          >
-            Pause Game
-          </button>
-        )}
         <form onSubmit={handleSubmit} style={{ marginTop: '30px' }}>
         <input
   type="text"

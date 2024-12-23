@@ -21,19 +21,19 @@
 
     <style>
       body {
-        margin: 0;
-        font-family: 'Poppins', sans-serif;
-        background: url('https://i.ibb.co/nsvMz3g/cdn-donmai-us-a58109.webp') no-repeat center center fixed;
-        background-size: cover;
-        color: #fff;
-        overflow: hidden;
-        height: 100vh;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        text-align: center;
-        padding: 10px;
-      }
+  margin: 0;
+  font-family: 'Poppins', sans-serif;
+  background: url('https://i.ibb.co/nsvMz3g/cdn-donmai-us-a58109.webp') no-repeat center center fixed;
+  background-size: cover;
+  color: #fff;
+  height: 100%;
+  display: flex;
+  flex-direction: column; /* Allow vertical stacking */
+  justify-content: flex-start; /* Start content from the top */
+  align-items: center;
+  padding: 10px;
+  overflow-y: auto; /* Enable scrolling */
+}
       
       @media (max-width: 768px) {
   button {
