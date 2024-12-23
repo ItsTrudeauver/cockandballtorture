@@ -34,6 +34,19 @@
   padding: 10px;
   overflow-y: auto; /* Enable scrolling */
 }
+
+@media (min-width: 769px) {
+  body {
+    overflow: hidden; /* Prevent scrolling */
+  }
+
+  #root {
+    height: 100vh; /* Fixed height for consistent layout */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+}
       
       @media (max-width: 768px) {
   button {
@@ -58,6 +71,35 @@
     width: 80%; /* Further reduce width for very small screens */
   }
 }
+
+/* For WebKit-based browsers (Chrome, Safari, Edge) */
+.scroll-container {
+  overflow-y: auto;
+  max-height: 300px; /* Fixed height */
+  border: 1px solid rgba(255, 255, 255, 0.2); /* Optional sleek border */
+  padding: 10px;
+  border-radius: 5px;
+  scrollbar-width: thin; /* Firefox-specific */
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent; /* Firefox-specific */
+}
+
+.scroll-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scroll-container::-webkit-scrollbar-track {
+  background: transparent; /* Transparent background */
+}
+
+.scroll-container::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.3); /* Semi-transparent scrollbar thumb */
+  border-radius: 10px;
+}
+
+.scroll-container::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 255, 255, 0.5); /* Slightly brighter when hovered */
+}
+
 
       /* Animated background circles */
       .background-circles {
@@ -120,10 +162,16 @@
     transform: translateY(20px);
   }
 }
-
-      #root {
-        text-align: center;
-      }
+#root {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%; /* Ensures full height usage */
+  width: 100%;  /* Ensures full width usage */
+  overflow: auto; /* Allow scrolling if needed */
+  text-align: center;
+}
 
       h1 {
         font-size: 4rem;

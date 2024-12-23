@@ -19,17 +19,6 @@ const App = () => {
   const [showPauseConfirm, setShowPauseConfirm] = useState(false);
   const [width] = useWindowSize();
 
-  const useWindowSize = () => {
-    const [size, setSize] = useState([window.innerWidth, window.innerHeight]);
-  
-    useEffect(() => {
-      const handleResize = () => setSize([window.innerWidth, window.innerHeight]);
-      window.addEventListener("resize", handleResize);
-      return () => window.removeEventListener("resize", handleResize);
-    }, []);
-  
-    return size;
-  };
 
   const handleGetStarted = () => {
     setIsFadingOut(true); // Trigger the fade-out effect
@@ -496,26 +485,36 @@ return (
 >
 <div
     style={{
-      overflow: 'auto',
-      maxHeight: '50vh',
+      overflowY: 'auto',
+      height: '200px',
       width: width <= 768 ? '100%' : '45%',
-      border: '1px solid #ccc',
+      border: '1px solid rgba(255, 255, 255, 0.2)', /* Optional sleek border */
       padding: '10px',
       borderRadius: '5px',
-    }} ref={menContainerRef}>
-            {renderList(enteredNames.men)}
-          </div>
-          <div
+      scrollbarWidth: 'thin', /* Firefox-specific */
+      scrollbarColor: 'rgba(255, 255, 255, 0.2) transparent', /* Firefox-specific */
+    }}
+    className="scroll-container" /* Add className for additional styling */
+    ref={menContainerRef}
+  >
+    {renderList(enteredNames.men)}
+  </div>
+  <div
     style={{
-      overflow: 'auto',
-      maxHeight: '50vh',
+      overflowY: 'auto',
+      height: '200px',
       width: width <= 768 ? '100%' : '45%',
-      border: '1px solid #ccc',
+      border: '1px solid rgba(255, 255, 255, 0.2)', /* Optional sleek border */
       padding: '10px',
       borderRadius: '5px',
-    }} ref={womenContainerRef}>
-            {renderList(enteredNames.women)}
-          </div>
+      scrollbarWidth: 'thin', /* Firefox-specific */
+      scrollbarColor: 'rgba(255, 255, 255, 0.2) transparent', /* Firefox-specific */
+    }}
+    className="scroll-container" /* Add className for additional styling */
+    ref={womenContainerRef}
+  >
+    {renderList(enteredNames.women)}
+  </div>
         </div>
 
         {!isRunning ? (
