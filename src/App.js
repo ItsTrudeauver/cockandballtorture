@@ -16,7 +16,7 @@ const App = () => {
   const [pendingNames, setPendingNames] = useState([]);
   const [timer, setTimer] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
-  const [notification, setNotification] = useState(null);
+  const [notificationMessage, notification, setNotification, setNotificationMessage] = useState(null);
   const [timeIntervals, setTimeIntervals] = useState([]);
   const [showGame, setShowGame] = useState(false);
   const [showPauseConfirm, setShowPauseConfirm] = useState(false);
@@ -37,15 +37,14 @@ const App = () => {
   };
 
   const handleSaveResults = () => {
-    const isComplete = menCount === 100 && womenCount === 100;
-    const confirmationMessage = isComplete
-      ? 'The session is complete. Save results by entering your name below:'
-      : 'The session is incomplete. Enter your name to save anyway:';
+    if (menCount !== 100 || womenCount !== 100) {
+      showNotification('You can only save results once the session is complete.');
+      return;
+    }
   
-    // Trigger notification-style input prompt
-    showNotification(confirmationMessage, (playerName) => {
-      if (typeof playerName !== 'string' || playerName.trim() === '') {
-        showNotification('Save canceled. A name is required to save the session.');
+    showNotification('Session is complete. Enter your name to save:', (playerName) => {
+      if (!playerName || playerName.trim() === '') {
+        showNotification('Save canceled. A name is required.');
         return;
       }
   
@@ -54,18 +53,28 @@ const App = () => {
         date: new Date().toLocaleString(),
         men: enteredNames.men,
         women: enteredNames.women,
-        totalTime: timer, // Total time for the game
         menTime: calculateTotalTime('men'),
         womenTime: calculateTotalTime('women'),
-        isComplete,
+        totalTime: timer,
       };
   
-      saveSession(session);
-      showNotification(`Results saved successfully for ${playerName.trim()}${isComplete ? '!' : ' (incomplete session).'}`);
+      fetch('/sessions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(session),
+      })
+        .then((res) => {
+          if (!res.ok) {
+            throw new Error('Failed to save session');
+          }
+          return res.json();
+        })
+        .then(() => showNotification('Session saved successfully!'))
+        .catch((err) => showNotification(`Error saving session: ${err.message}`));
     });
   };
 
-
+  
   const levenshteinDistance = (a, b) => {
     const matrix = Array.from({ length: b.length + 1 }, (_, i) =>
       Array.from({ length: a.length + 1 }, (_, j) => (i === 0 ? j : j === 0 ? i : 0))
@@ -93,50 +102,78 @@ const App = () => {
   const menContainerRef = useRef(null);
   const womenContainerRef = useRef(null);
 
+  let activeNotification = null; // Track the active notification
+
   const showNotification = (message, callback = () => {}) => {
-    const notificationContainer = document.createElement('div');
-    notificationContainer.style.position = 'fixed';
-    notificationContainer.style.top = '20%';
-    notificationContainer.style.left = '50%';
-    notificationContainer.style.transform = 'translate(-50%, -20%)';
-    notificationContainer.style.background = 'white';
-    notificationContainer.style.padding = '20px';
-    notificationContainer.style.borderRadius = '10px';
-    notificationContainer.style.boxShadow = '0 4px 10px rgba(0, 0, 0, 0.2)';
-    notificationContainer.style.zIndex = '1000';
-    notificationContainer.style.textAlign = 'center';
+    // Remove the existing notification if present
+    if (activeNotification) {
+      console.log('Removing existing notification...');
+      document.body.removeChild(activeNotification);
+      activeNotification = null;
+    }
   
-    const messageText = document.createElement('p');
-    messageText.textContent = message;
-    notificationContainer.appendChild(messageText);
-  
-    const inputField = document.createElement('input');
-    inputField.type = 'text';
-    inputField.placeholder = 'Enter your name';
-    inputField.style.margin = '10px 0';
-    inputField.style.padding = '10px';
-    inputField.style.width = '80%';
-    inputField.style.border = '1px solid #ccc';
-    inputField.style.borderRadius = '5px';
-    notificationContainer.appendChild(inputField);
-  
-    const confirmButton = document.createElement('button');
-    confirmButton.textContent = 'Save';
-    confirmButton.style.padding = '10px 20px';
-    confirmButton.style.backgroundColor = '#2ecc71';
-    confirmButton.style.color = 'white';
-    confirmButton.style.border = 'none';
-    confirmButton.style.borderRadius = '5px';
-    confirmButton.style.cursor = 'pointer';
-  
-    confirmButton.onclick = () => {
-      callback(inputField.value); // Callback is always a valid function now
+  const notificationContainer = document.createElement('div');
+  notificationContainer.className = 'notification-container';
+  notificationContainer.style.position = 'fixed';
+  notificationContainer.style.top = '20%';
+  notificationContainer.style.left = '50%';
+  notificationContainer.style.transform = 'translate(-50%, -20%)';
+  notificationContainer.style.background = 'white';
+  notificationContainer.style.padding = '20px';
+  notificationContainer.style.borderRadius = '10px';
+  notificationContainer.style.boxShadow = '0 4px 10px rgba(0, 0, 0, 0.2)';
+  notificationContainer.style.zIndex = '1000';
+  notificationContainer.style.textAlign = 'center';
+
+  const messageText = document.createElement('p');
+  messageText.textContent = message;
+  notificationContainer.appendChild(messageText);
+
+  const inputField = document.createElement('input');
+  inputField.type = 'text';
+  inputField.placeholder = 'Enter your name';
+  inputField.style.margin = '10px 0';
+  inputField.style.padding = '10px';
+  inputField.style.width = '80%';
+  inputField.style.border = '1px solid #ccc';
+  inputField.style.borderRadius = '5px';
+  notificationContainer.appendChild(inputField);
+
+  const confirmButton = document.createElement('button');
+  confirmButton.textContent = 'Save';
+  confirmButton.style.padding = '10px 20px';
+  confirmButton.style.backgroundColor = '#2ecc71';
+  confirmButton.style.color = 'white';
+  confirmButton.style.border = 'none';
+  confirmButton.style.borderRadius = '5px';
+  confirmButton.style.cursor = 'pointer';
+
+  // Add event listener for the confirm button
+  confirmButton.addEventListener('click', () => {
+    console.log('Save button clicked');
+    if (callback && typeof callback === 'function') {
+      callback(inputField.value.trim());
+    }
+
+    // Remove the notification after callback execution
+    if (document.body.contains(notificationContainer)) {
       document.body.removeChild(notificationContainer);
-    };
+      activeNotification = null; // Reset active notification
+    } else {
+      console.warn('Notification container was already removed.');
+    }
+  });
+
+  notificationContainer.appendChild(confirmButton);
+  document.body.appendChild(notificationContainer);
+
+  // Set focus to the input field and track active notification
+  inputField.focus();
+  activeNotification = notificationContainer;
+};
+
   
-    notificationContainer.appendChild(confirmButton);
-    document.body.appendChild(notificationContainer);
-  };
+  
   
   
   
@@ -158,7 +195,13 @@ const App = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
   
-
+  useEffect(() => {
+    if (menCount === 100 && womenCount === 100) {
+      setIsRunning(false);
+      showNotification('Both men and women counts have reached 100. Timer stopped!');
+    }
+  }, [menCount, womenCount]);
+  
   useEffect(() => {
     const setViewportHeight = () => {
       const vh = window.innerHeight * 0.01; // 1% of the viewport height
@@ -307,29 +350,44 @@ const App = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const normalizedName = name.normalize('NFD').trim().replace(/\p{Diacritic}/gu, '').replace(' ', '_');
+  
+    // Normalize the input name
+    const normalizedName = name
+      .normalize('NFD')
+      .trim()
+      .replace(/\p{Diacritic}/gu, '')
+      .replace(' ', '_');
+  
+    // Check if the name already exists in either list
+    const isDuplicate =
+      enteredNames.men.some((player) => player.name.toLowerCase() === normalizedName.toLowerCase()) ||
+      enteredNames.women.some((player) => player.name.toLowerCase() === normalizedName.toLowerCase());
+  
+    if (isDuplicate) {
+      showNotification('This name is already listed.');
+      setName(''); // Clear the input field
+      return;
+    }
+  
+    // Add to pending names
     setPendingNames((prev) => [...prev, normalizedName]);
     setName('');
+  
+    // Validate name through Wikidata
     const validation = await fetchWikidataInfo(normalizedName);
     setPendingNames((prev) => prev.filter((n) => n !== normalizedName));
-
+  
     if (validation.error) {
+      showNotification(validation.error);
       return;
     }
-
-    if (
-      [...enteredNames.men, ...enteredNames.women].some((n) =>
-        areNamesSimilar(n.name, normalizedName)
-      )
-    ) {
-      return;
-    }
-    
-
+  
+    // Handle valid names
     if (!validation.isValid) {
+      showNotification('Invalid name.');
       return;
     }
-
+  
     const currentTime = new Date().getTime();
     if (lastCorrectTime.current) {
       const interval = ((currentTime - lastCorrectTime.current) / 1000).toFixed(3);
@@ -339,7 +397,8 @@ const App = () => {
       validation.timeInterval = timer.toFixed(3);
     }
     lastCorrectTime.current = currentTime;
-
+  
+    // Add to the appropriate list
     if (validation.gender === 'male' && menCount < 100) {
       setMenCount((c) => c + 1);
       setEnteredNames((prev) => ({ ...prev, men: [...prev.men, validation] }));
@@ -347,12 +406,20 @@ const App = () => {
       setWomenCount((c) => c + 1);
       setEnteredNames((prev) => ({ ...prev, women: [...prev.women, validation] }));
     } else {
+      showNotification('Cannot add more players in this category.');
       return;
     }
-
+  
+    // Stop timer when both counts reach 100
     if (menCount + 1 === 100 && womenCount === 100) {
       setIsRunning(false);
+      showNotification('Both men and women counts have reached 100. Timer stopped!');
+    } else if (menCount === 100 && womenCount + 1 === 100) {
+      setIsRunning(false);
+      showNotification('Both men and women counts have reached 100. Timer stopped!');
     }
+  
+  
   };
 
   const startGame = () => {
@@ -789,19 +856,21 @@ return (
 
                   <button
   onClick={() => handleSaveResults()} // Call function to save results
+  disabled={menCount !== 100 || womenCount !== 100} // Disable button unless session is complete
   style={{
     marginLeft: '10px',
     padding: '15px 30px',
     fontSize: '1.1rem',
-    backgroundColor: menCount === 100 && womenCount === 100 ? '#2ecc71' : '#ffcc00', // Green for complete, yellow for incomplete
+    backgroundColor: menCount === 100 && womenCount === 100 ? '#2ecc71' : '#d3d3d3', // Green for complete, grey for disabled
     color: 'white',
     borderRadius: '10px',
-    cursor: 'pointer', // Always clickable
+    cursor: menCount === 100 && womenCount === 100 ? 'pointer' : 'not-allowed', // Pointer for enabled, not-allowed for disabled
     border: 'none',
   }}
 >
-  {menCount === 100 && womenCount === 100 ? 'Save Results' : 'Save Incomplete Results'}
+  {menCount === 100 && womenCount === 100 ? 'Save Results' : 'Complete Session to Save'}
 </button>
+
 <button
   onClick={() => window.location.href = '/'} // Navigate to home page
   style={{

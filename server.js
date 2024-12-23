@@ -7,13 +7,13 @@ const cors = require('cors');
 const app = express();
 const PORT = 5000;
 
-// Middleware
+
 app.use(cors({
-  origin: ['https://100m100w.vercel.app', 'http://localhost:3000'], // Add localhost
+  origin: ['https://100m100w.vercel.app', 'http://localhost:3000'], 
 }));
 app.use(bodyParser.json());
 
-// MongoDB Connection
+
 mongoose
   .connect(`mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PASS}@100m100w.tbtwm.mongodb.net/?retryWrites=true&w=majority&appName=100m100w`, {
     useNewUrlParser: true,
@@ -22,7 +22,7 @@ mongoose
   .then(() => console.log('Connected to MongoDB'))
   .catch((err) => console.error('Error connecting to MongoDB:', err));
 
-// Mongoose Schema
+
 const sessionSchema = new mongoose.Schema({
   playerName: String,
   date: String,
