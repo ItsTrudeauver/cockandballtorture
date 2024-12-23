@@ -282,10 +282,10 @@ const App = () => {
     
     container: {
       height: '720px', 
-      minHeight: '600px', 
+      minHeight: '450px', 
       maxHeight: '90vh', 
       width: '100%', 
-      maxWidth: isMobile ? '600px' : '1200px' ,
+      maxWidth: isMobile ? '450px' : '1200px' ,
       minWidth: '300px', 
       textAlign: 'center',
       padding: '20px',
@@ -464,7 +464,9 @@ return (
       <div style={styles.container}>
         {notification && <div style={styles.notification}>{notification}</div>}
 
-        <h1 style={styles.mainHeader}>100 Men & Women Naming Game</h1>
+        <h1 style={styles.mainHeader}>
+  {isMobile ? '100MW' : '100 Men & Women Naming Game'}
+</h1>
 
         <p style={{ fontFamily: 'Sarpanch, sans-serif', fontSize: '1.5rem', color: '#ddd' }}>Time: {timer}s</p>
 
@@ -477,7 +479,7 @@ return (
     </div>
   ) : (
     <>
-      <div style={{ ...styles.header, marginRight: '220px' }}>
+      <div style={{ ...styles.header, marginRight: '120px' }}>
         Men
         <br /> {menCount}/100
       </div>
@@ -516,6 +518,7 @@ return (
         marginBottom: '10px',
       }}
     >
+    
       Toggle to {currentList === 'men' ? 'Women' : 'Men'}
     </button>
 
@@ -525,7 +528,7 @@ return (
         overflowY: 'auto',
         height: '200px',
         width: '90%',
-        maxWidth: '600px',
+        maxWidth: '450px',
         minWidth: '280px',
         border: '1px solid rgba(255, 255, 255, 0.2)',
         padding: '10px',
@@ -545,7 +548,7 @@ return (
         overflowY: 'auto',
         height: '200px',
         width: 'calc(50% - 20px)',
-        maxWidth: '600px',
+        maxWidth: '450px',
         minWidth: '280px',
         border: '1px solid rgba(255, 255, 255, 0.2)',
         padding: '10px',
@@ -563,7 +566,7 @@ return (
         overflowY: 'auto',
         height: '200px',
         width: 'calc(50% - 20px)',
-        maxWidth: '600px',
+        maxWidth: '450px',
         minWidth: '280px',
         border: '1px solid rgba(255, 255, 255, 0.2)',
         padding: '10px',
@@ -591,7 +594,7 @@ return (
             cursor: 'pointer',
             border: 'none',
             width: '90%', // Ensure it scales on mobile
-            maxWidth: '300px',
+            maxWidth: '150px',
           }}
         >
           Start Game
@@ -625,7 +628,7 @@ return (
   style={{
     padding: '10px',
     fontSize: '1rem',
-    width: '50%%',
+    width: isMobile? '50%%': '80%',
     borderRadius: '5px',
     border: '1px solid #ccc',
     marginBottom: '10px',
