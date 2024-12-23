@@ -1,4 +1,4 @@
-// File: /api/sessions.js
+
 const mongoose = require('mongoose');
 
 const uri = `mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PASS}@100m100w.tbtwm.mongodb.net/?retryWrites=true&w=majority&appName=100m100w`;

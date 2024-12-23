@@ -14,12 +14,16 @@ const ArchivedSessions = () => {
 
   useEffect(() => {
     const fetchSessions = async () => {
-      const fetchedSessions = await getSessions();
-      setSessions(fetchedSessions);
+      try {
+        const fetchedSessions = await getSessions();
+        setSessions(fetchedSessions);
+      } catch (error) {
+        console.error('Failed to fetch sessions:', error);
+        setSessions([]);
+      }
     };
     fetchSessions();
   }, []);
-  
 
   const handleSort = (key) => {
     const sortedSessions = [...sessions].sort((a, b) => {
@@ -84,7 +88,7 @@ const ArchivedSessions = () => {
           backgroundColor: 'rgba(0, 0, 0, 0.8)',
           padding: '15px',
           borderRadius: '10px',
-          width: isMobile? '300px':'600px',
+          width: isMobile ? '300px' : '600px',
           margin: '0 auto',
         }}
       >
@@ -214,7 +218,7 @@ const ArchivedSessions = () => {
               >
                 Go
               </button>
-            </div>
+              </div>
           </div>
 
           <button
@@ -222,7 +226,7 @@ const ArchivedSessions = () => {
             disabled={currentPage === totalPages}
             style={{
               padding: '10px 20px',
-              fontSize:              '1rem',
+              fontSize: '1rem',
               backgroundColor: currentPage === totalPages ? '#ccc' : '#3498DB',
               color: 'white',
               borderRadius: '5px',
@@ -256,4 +260,3 @@ const ArchivedSessions = () => {
 };
 
 export default ArchivedSessions;
-
