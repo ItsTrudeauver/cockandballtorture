@@ -63,6 +63,25 @@ const App = () => {
     setNotification(message);
     setTimeout(() => setNotification(null), 3000);
   };
+  
+  useEffect(() => {
+    let originalHeight = window.innerHeight;
+  
+    const handleResize = () => {
+      const currentHeight = window.innerHeight;
+      const keyboardVisible = currentHeight < originalHeight; // Detect keyboard visibility
+  
+      if (keyboardVisible) {
+        document.body.style.setProperty('margin-bottom', `${originalHeight - currentHeight}px`);
+      } else {
+        document.body.style.setProperty('margin-bottom', '0px'); // Reset margin
+      }
+    };
+  
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+  
 
   useEffect(() => {
     const setViewportHeight = () => {
@@ -634,17 +653,20 @@ return (
   type="text"
   value={name}
   onChange={(e) => setName(e.target.value)}
-  disabled = {!isRunning}
+  onFocus={(e) => {
+    e.target.scrollIntoView({ behavior: 'smooth', block: 'center' }); // Scroll input into view
+  }}
   placeholder="Enter a name"
   style={{
     padding: '10px',
     fontSize: '1rem',
-    width: isMobile? '50%%': '80%',
+    width: '50%',
     borderRadius: '5px',
     border: '1px solid #ccc',
     marginBottom: '10px',
   }}
 />
+
           <div style={{ textAlign: 'center' }}>
             <button
               type="submit"
