@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import PlayerList from './PlayerList';
 import useWindowSize from './useWindowSize';
+import { isMobile } from 'react-device-detect';
 
 
 const App = () => {
@@ -18,7 +19,7 @@ const App = () => {
   const [showGame, setShowGame] = useState(false);
   const [showPauseConfirm, setShowPauseConfirm] = useState(false);
   const [width] = useWindowSize();
-  const isMobile = width / window.devicePixelRatio <= 480; 
+  const [currentList, setCurrentList] = useState('men');
 
 
 
@@ -468,64 +469,114 @@ return (
         <p style={{ fontFamily: 'Sarpanch, sans-serif', fontSize: '1.5rem', color: '#ddd' }}>Time: {timer}s</p>
 
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
-          <div style={{ ...styles.header, marginRight: '220px' }}>
-            Men
-            <br /> {menCount}/100
-          </div>
+  {isMobile ? (
+    <div style={styles.header}>
+      {currentList === 'men' ? 'Men' : 'Women'}
+      <br />
+      {currentList === 'men' ? menCount : womenCount}/100
+    </div>
+  ) : (
+    <>
+      <div style={{ ...styles.header, marginRight: '220px' }}>
+        Men
+        <br /> {menCount}/100
+      </div>
+      <div style={{ ...styles.header, marginLeft: '120px' }}>
+        Women
+        <br /> {womenCount}/100
+      </div>
+    </>
+  )}
+</div>
 
-          <div style={{ ...styles.header, marginLeft: '120px' }}>
-            Women
-            <br /> {womenCount}/100
-          </div>
-        </div>
 
         <div
   style={{
     display: 'flex',
-    flexDirection: width <= 768 ? 'column' : 'row',
+    flexDirection: isMobile ? 'column' : 'row',
     gap: '20px',
     alignItems: 'stretch',
     justifyContent: 'center',
     padding: '10px',
   }}
 >
-<div
-    style={{
-      overflowY: 'auto',
-    height: '200px',
-    width: width <= 768 ? '90%' : 'calc(50% - 20px)', // More precise responsive logic
-    maxWidth: '600px', // Limit maximum width for high-res displays
-    minWidth: '280px', // Minimum width to ensure usability
-    border: '1px solid rgba(255, 255, 255, 0.2)', // Optional sleek border
-    padding: '10px',
-    borderRadius: '5px',
-    scrollbarWidth: 'thin', // Firefox-specific
-    scrollbarColor: 'rgba(255, 255, 255, 0.2) transparent', /* Firefox-specific */
-    }}
-    className="scroll-container" /* Add className for additional styling */
-    ref={menContainerRef}
-  >
-    {renderList(enteredNames.men)}
+{isMobile ? (
+  <>
+    {/* Toggle Button */}
+    <button
+      onClick={() => setCurrentList((prev) => (prev === 'men' ? 'women' : 'men'))}
+      style={{
+        padding: '10px 20px',
+        fontSize: '1rem',
+        backgroundColor: '#22C55E',
+        color: 'white',
+        borderRadius: '5px',
+        cursor: 'pointer',
+        border: 'none',
+        marginBottom: '10px',
+      }}
+    >
+      Toggle to {currentList === 'men' ? 'Women' : 'Men'}
+    </button>
+
+    {/* Display the selected list */}
+    <div
+      style={{
+        overflowY: 'auto',
+        height: '200px',
+        width: '90%',
+        maxWidth: '600px',
+        minWidth: '280px',
+        border: '1px solid rgba(255, 255, 255, 0.2)',
+        padding: '10px',
+        borderRadius: '5px',
+      }}
+      className="scroll-container"
+      ref={currentList === 'men' ? menContainerRef : womenContainerRef}
+    >
+      {renderList(currentList === 'men' ? enteredNames.men : enteredNames.women)}
+    </div>
+  </>
+) : (
+  <div style={{ display: 'flex', gap: '20px' }}>
+    {/* Men List */}
+    <div
+      style={{
+        overflowY: 'auto',
+        height: '200px',
+        width: 'calc(50% - 20px)',
+        maxWidth: '600px',
+        minWidth: '280px',
+        border: '1px solid rgba(255, 255, 255, 0.2)',
+        padding: '10px',
+        borderRadius: '5px',
+      }}
+      className="scroll-container"
+      ref={menContainerRef}
+    >
+      {renderList(enteredNames.men)}
+    </div>
+
+    {/* Women List */}
+    <div
+      style={{
+        overflowY: 'auto',
+        height: '200px',
+        width: 'calc(50% - 20px)',
+        maxWidth: '600px',
+        minWidth: '280px',
+        border: '1px solid rgba(255, 255, 255, 0.2)',
+        padding: '10px',
+        borderRadius: '5px',
+      }}
+      className="scroll-container"
+      ref={womenContainerRef}
+    >
+      {renderList(enteredNames.women)}
+    </div>
   </div>
-  <div
-     style={{
-      overflowY: 'auto',
-      height: '200px',
-      width: width <= 768 ? '90%' : 'calc(50% - 20px)', // More precise responsive logic
-      maxWidth: '600px', // Limit maximum width for high-res displays
-      minWidth: '280px', // Minimum width to ensure usability
-      border: '1px solid rgba(255, 255, 255, 0.2)', // Optional sleek border
-      padding: '10px',
-      borderRadius: '5px',
-      scrollbarWidth: 'thin', // Firefox-specific
-      scrollbarColor: 'rgba(255, 255, 255, 0.2) transparent', // Firefox-specific
-   
-    }}
-    className="scroll-container" /* Add className for additional styling */
-    ref={womenContainerRef}
-  >
-    {renderList(enteredNames.women)}
-  </div>
+)}
+
         </div>
 
         {!isRunning ? (
@@ -574,7 +625,7 @@ return (
   style={{
     padding: '10px',
     fontSize: '1rem',
-    width: '100%', // Make input full width
+    width: '50%%',
     borderRadius: '5px',
     border: '1px solid #ccc',
     marginBottom: '10px',
