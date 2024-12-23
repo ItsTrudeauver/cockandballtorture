@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import PlayerList from './PlayerList';
+import useWindowSize from './useWindowSize';
+
 
 const App = () => {
   const [showLandingPage, setShowLandingPage] = useState(true);
@@ -15,8 +17,19 @@ const App = () => {
   const [timeIntervals, setTimeIntervals] = useState([]);
   const [showGame, setShowGame] = useState(false);
   const [showPauseConfirm, setShowPauseConfirm] = useState(false);
+  const [width] = useWindowSize();
 
-
+  const useWindowSize = () => {
+    const [size, setSize] = useState([window.innerWidth, window.innerHeight]);
+  
+    useEffect(() => {
+      const handleResize = () => setSize([window.innerWidth, window.innerHeight]);
+      window.addEventListener("resize", handleResize);
+      return () => window.removeEventListener("resize", handleResize);
+    }, []);
+  
+    return size;
+  };
 
   const handleGetStarted = () => {
     setIsFadingOut(true); // Trigger the fade-out effect
@@ -472,13 +485,13 @@ return (
         </div>
 
         <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: '20px',
-            alignItems: 'start',
-          }}
-        >
+  style={{
+    display: width <= 768 ? 'flex' : 'grid',
+    flexDirection: width <= 768 ? 'column' : 'row',
+    gap: '20px',
+    alignItems: 'start',
+  }}
+>
           <div style={styles.list} ref={menContainerRef}>
             {renderList(enteredNames.men)}
           </div>
@@ -491,14 +504,12 @@ return (
           <button
             onClick={startGame}
             style={{
-              padding: '15px 30px',
-              fontSize: '1.2rem',
-              marginTop: '20px',
-              backgroundColor: '#4CAF50',
-              color: 'white',
-              borderRadius: '10px',
-              cursor: 'pointer',
-              border: 'none',
+              overflow: 'auto',
+              maxHeight: '50vh', // Adjust height dynamically
+              width: '100%',    // Ensure the list takes full width on small screens
+              border: '1px solid #ccc',
+              padding: '10px',
+              borderRadius: '5px',
             }}
           >
             Start Game
@@ -507,15 +518,14 @@ return (
           <button
             onClick={pauseGame}
             style={{
-              padding: '15px 30px',
-              fontSize: '1.2rem',
-              marginTop: '20px',
-              backgroundColor: '#FF5733',
-              color: 'white',
-              borderRadius: '10px',
-              cursor: 'pointer',
-              border: 'none',
+              overflow: 'auto',
+              maxHeight: '50vh',
+              width: '100%',
+              border: '1px solid #ccc',
+              padding: '10px',
+              borderRadius: '5px',
             }}
+        
           >
             Pause Game
           </button>
