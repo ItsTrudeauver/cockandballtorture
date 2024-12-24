@@ -25,6 +25,9 @@ const App = () => {
   const [width] = useWindowSize();
   const [currentList, setCurrentList] = useState('men');
   const [archivedSessions, setArchivedSessions] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [playerNameInput, setPlayerNameInput] = useState('');
+  
   const handleGetStarted = () => {
     // Logic to transition from the landing page to the game interface
     setShowLandingPage(false);
@@ -32,29 +35,88 @@ const App = () => {
   };
   
   
+  
 
   const calculateTotalTime = (gender) => {
     const times = enteredNames[gender]?.map((player) => parseFloat(player.timeInterval)) || [];
     return times.reduce((acc, time) => acc + time, 0).toFixed(3); // Sum up intervals
   };
-
-  const handleSaveResults = async () => {
-    // Prompt the user for their name
-    let playerName = prompt('Enter your name to save the session result:');
-    
-    // Trim whitespace from the input
-    playerName = playerName ? playerName.trim() : '';
+  const renderModal = () => (
+    isModalOpen && (
+      <div
+        style={{
+          position: 'fixed',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          backgroundColor: 'white',
+          padding: '20px',
+          borderRadius: '10px',
+          boxShadow: '0 4px 10px rgba(0, 0, 0, 0.2)',
+          zIndex: 1000,
+        }}
+      >
+        <h3>Enter your name to save the session result:</h3>
+        <input
+          type="text"
+          value={playerNameInput}
+          onChange={(e) => setPlayerNameInput(e.target.value)}
+          style={{
+            width: '100%',
+            padding: '10px',
+            margin: '10px 0',
+            borderRadius: '5px',
+            border: '1px solid #ccc',
+          }}
+        />
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+          <button
+            onClick={saveResultsWithName}
+            style={{
+              padding: '10px 20px',
+              backgroundColor: '#2ecc71',
+              color: 'white',
+              borderRadius: '5px',
+              border: 'none',
+              cursor: 'pointer',
+            }}
+          >
+            Save
+          </button>
+          <button
+            onClick={() => setIsModalOpen(false)}
+            style={{
+              padding: '10px 20px',
+              backgroundColor: '#FF5252',
+              color: 'white',
+              borderRadius: '5px',
+              border: 'none',
+              cursor: 'pointer',
+            }}
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    )
+  );
   
-    // Check if the name is empty or invalid
+
+  const handleSaveResults = () => {
+    setIsModalOpen(true); // Open the modal
+  };
+  
+  const saveResultsWithName = async () => {
+    const playerName = playerNameInput.trim();
+  
     if (!playerName) {
       showNotification('Name cannot be empty. Please enter a valid name.');
       return;
     }
   
-    // Prepare session data
     const sessionData = {
       playerName,
-      date: new Date().toISOString().split('T')[0], // Current date
+      date: new Date().toISOString().split('T')[0],
       men: enteredNames.men,
       women: enteredNames.women,
       menTime: calculateTotalTime('men'),
@@ -63,20 +125,16 @@ const App = () => {
     };
   
     try {
-      // Send the session data to the backend
       const response = await fetch('/sessions', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(sessionData),
       });
   
-      if (!response.ok) {
-        throw new Error('Failed to save the session result.');
-      }
+      if (!response.ok) throw new Error('Failed to save the session result.');
   
       showNotification('Session result saved successfully!');
+      setIsModalOpen(false); // Close the modal
     } catch (error) {
       console.error('Error saving session result:', error);
       showNotification('An error occurred while saving the session.');
@@ -960,6 +1018,9 @@ return (
                   </div>
                 </div>
               )}
+
+              {renderModal()}
+              
             </div>
           )
         }
