@@ -38,43 +38,51 @@ const App = () => {
     return times.reduce((acc, time) => acc + time, 0).toFixed(3); // Sum up intervals
   };
 
-  const handleSaveResults = () => {
-    if (menCount !== 100 || womenCount !== 100) {
-      showNotification('You can only save results once the session is complete.');
+  const handleSaveResults = async () => {
+    // Prompt the user for their name
+    let playerName = prompt('Enter your name to save the session result:');
+    
+    // Trim whitespace from the input
+    playerName = playerName ? playerName.trim() : '';
+  
+    // Check if the name is empty or invalid
+    if (!playerName) {
+      showNotification('Name cannot be empty. Please enter a valid name.');
       return;
     }
   
-    showNotification('Session is complete. Enter your name to save:', (playerName) => {
-      if (!playerName || playerName.trim() === '') {
-        showNotification('Save canceled. A name is required.');
-        return;
+    // Prepare session data
+    const sessionData = {
+      playerName,
+      date: new Date().toISOString().split('T')[0], // Current date
+      men: enteredNames.men,
+      women: enteredNames.women,
+      menTime: calculateTotalTime('men'),
+      womenTime: calculateTotalTime('women'),
+      totalTime: timer,
+    };
+  
+    try {
+      // Send the session data to the backend
+      const response = await fetch('/sessions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(sessionData),
+      });
+  
+      if (!response.ok) {
+        throw new Error('Failed to save the session result.');
       }
   
-      const session = {
-        playerName: playerName.trim(),
-        date: new Date().toLocaleString(),
-        men: enteredNames.men,
-        women: enteredNames.women,
-        menTime: calculateTotalTime('men'),
-        womenTime: calculateTotalTime('women'),
-        totalTime: timer,
-      };
-  
-      fetch('/sessions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(session),
-      })
-        .then((res) => {
-          if (!res.ok) {
-            throw new Error('Failed to save session');
-          }
-          return res.json();
-        })
-        .then(() => showNotification('Session saved successfully!'))
-        .catch((err) => showNotification(`Error saving session: ${err.message}`));
-    });
+      showNotification('Session result saved successfully!');
+    } catch (error) {
+      console.error('Error saving session result:', error);
+      showNotification('An error occurred while saving the session.');
+    }
   };
+  
 
   
   const levenshteinDistance = (a, b) => {
