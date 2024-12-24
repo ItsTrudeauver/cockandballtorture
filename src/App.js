@@ -300,41 +300,48 @@ const App = () => {
       .replace(/\p{Diacritic}/gu, '')
       .replace(' ', '_');
   
+    // Clear the input immediately
+    setName('');
+  
     // Fetch and validate data from Wikidata
     const validation = await fetchWikidataInfo(normalizedName);
   
     // Check for duplicate names by name or ID
-    const isDuplicate = enteredNames.men.some(
-      (player) =>
-        player.name.toLowerCase() === normalizedName.toLowerCase() || 
-        (validation && validation.id && player.id === validation.id)
-    ) || enteredNames.women.some(
-      (player) =>
-        player.name.toLowerCase() === normalizedName.toLowerCase() || 
-        (validation && validation.id && player.id === validation.id)
-    );
+    const isDuplicate =
+      enteredNames.men.some(
+        (player) =>
+          player.name.toLowerCase() === normalizedName.toLowerCase() ||
+          (validation && validation.id && player.id === validation.id)
+      ) ||
+      enteredNames.women.some(
+        (player) =>
+          player.name.toLowerCase() === normalizedName.toLowerCase() ||
+          (validation && validation.id && player.id === validation.id)
+      );
   
     if (isDuplicate) {
       showNotification('This name or entity already exists in the list.');
-      setName('');
-      return;
+      return; // Stop further processing
     }
   
+    // Show the pending name (optional feedback)
     setPendingNames((prev) => [...prev, normalizedName]);
-    setName('');
-  
-    setPendingNames((prev) => prev.filter((n) => n !== normalizedName));
   
     if (validation.error) {
       showNotification(validation.error);
+      // Remove from pending names if invalid
+      setPendingNames((prev) => prev.filter((n) => n !== normalizedName));
       return;
     }
   
     if (!validation.isValid) {
       showNotification('Invalid name.');
+      // Remove from pending names if invalid
+      setPendingNames((prev) => prev.filter((n) => n !== normalizedName));
       return;
     }
   
+    // Calculate time interval
     const currentTime = new Date().getTime();
     const interval = lastCorrectTime.current
       ? ((currentTime - lastCorrectTime.current) / 1000).toFixed(3)
@@ -342,8 +349,10 @@ const App = () => {
   
     lastCorrectTime.current = currentTime;
   
+    // Add timeInterval to validation object
     validation.timeInterval = interval;
   
+    // Update the appropriate list
     if (validation.gender === 'male' && menCount < 100) {
       setMenCount((c) => c + 1);
       setEnteredNames((prev) => ({ ...prev, men: [...prev.men, validation] }));
@@ -353,7 +362,11 @@ const App = () => {
     } else {
       showNotification('Cannot add more entities in this category.');
     }
+  
+    // Remove from pending names once processed
+    setPendingNames((prev) => prev.filter((n) => n !== normalizedName));
   };
+  
 
 
   const startGame = () => {
@@ -496,7 +509,7 @@ const App = () => {
 };
 const renderList = (players) => {
   if (!players || players.length === 0) {
-    return <div style={{ textAlign: 'center', color: '#bbb' }}>No players added yet.</div>;
+    return <div style={{ textAlign: 'center', color: '#bbb' }}>Your records show here.</div>;
   }
 
   return players.map((player, index) => (
@@ -679,11 +692,11 @@ return (
                   </div>
                 ) : (
                   <>
-                    <div style={{ ...styles.header, marginRight: '120px' }}>
+                    <div style={{ ...styles.header, marginRight: '240px' }}>
                       Men
                       <br /> {menCount}/100
                     </div>
-                    <div style={{ ...styles.header, marginLeft: '120px' }}>
+                    <div style={{ ...styles.header, marginLeft: '240px' }}>
                       Women
                       <br /> {womenCount}/100
                     </div>
