@@ -25,9 +25,14 @@ th, td {
 }
 
 th {
-  background-color: #f4f4f4;
+  background-color: #f4f4f4; /* Light gray background */
+  color: black; /* Black text */
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: center;
   font-weight: bold;
 }
+
 
 tr:nth-child(even) {
   background-color: #f9f9f9;
