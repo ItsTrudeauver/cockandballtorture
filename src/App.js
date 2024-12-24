@@ -351,7 +351,7 @@ const App = () => {
       setWomenCount((c) => c + 1);
       setEnteredNames((prev) => ({ ...prev, women: [...prev.women, validation] }));
     } else {
-      showNotification('Cannot add more players in this category.');
+      showNotification('Cannot add more entities in this category.');
     }
   };
 
@@ -495,34 +495,37 @@ const App = () => {
     
 };
 
-const renderList = (players) => {
-    if (!Array.isArray(players) || players.length === 0) {
-        return <div style={{ textAlign: 'center', color: '#bbb' }}>Record has not begun.</div>;
-    }
+const renderCompactResults = (sessions) => {
+  if (!Array.isArray(sessions) || sessions.length === 0) {
+      return <div style={{ textAlign: 'center', color: '#bbb' }}>No results available.</div>;
+  }
 
-    return players.map((player, index) => (
-        <div key={index} style={styles.listItem}>
-            {player.image && (
-                <img
-                    src={player.image}
-                    alt={player.name}
-                    style={{ width: '60px', height: '60px', borderRadius: '50%' }}
-                />
-            )}
-            <a
-                href={player.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={styles.link}
-            >
-                {player.name}
-            </a>
-            <span style={{ marginLeft: 'auto', fontSize: '1rem', color: '#ddd' }}>
-                {player.timeInterval}s
-            </span>
-        </div>
-    ));
+  return (
+      <table style={{ width: '100%', textAlign: 'center', borderCollapse: 'collapse', margin: '20px 0' }}>
+          <thead>
+              <tr>
+                  <th style={{ border: '1px solid #ddd', padding: '8px' }}>Date</th>
+                  <th style={{ border: '1px solid #ddd', padding: '8px' }}>Player</th>
+                  <th style={{ border: '1px solid #ddd', padding: '8px' }}>M: Time</th>
+                  <th style={{ border: '1px solid #ddd', padding: '8px' }}>W: Time</th>
+                  <th style={{ border: '1px solid #ddd', padding: '8px' }}>Total</th>
+              </tr>
+          </thead>
+          <tbody>
+              {sessions.map((session, index) => (
+                  <tr key={index}>
+                      <td style={{ border: '1px solid #ddd', padding: '8px' }}>{session.date}</td>
+                      <td style={{ border: '1px solid #ddd', padding: '8px' }}>{session.playerName}</td>
+                      <td style={{ border: '1px solid #ddd', padding: '8px' }}>M: {session.menTime}</td>
+                      <td style={{ border: '1px solid #ddd', padding: '8px' }}>W: {session.womenTime}</td>
+                      <td style={{ border: '1px solid #ddd', padding: '8px' }}>{session.totalTime}</td>
+                  </tr>
+              ))}
+          </tbody>
+      </table>
+  );
 };
+
 
 return (
   <Router>
@@ -706,7 +709,7 @@ return (
                       className="scroll-container"
                       ref={currentList === 'men' ? menContainerRef : womenContainerRef}
                     >
-                      {renderList(currentList === 'men' ? enteredNames.men : enteredNames.women)}
+                      {renderCompactResults(currentList === 'men' ? enteredNames.men : enteredNames.women)}
                     </div>
                   </>
                 ) : (
@@ -725,7 +728,7 @@ return (
                       className="scroll-container"
                       ref={menContainerRef}
                     >
-                      {renderList(enteredNames.men)}
+                      {renderCompactResults(enteredNames.men)}
                     </div>
 
                     <div
@@ -742,7 +745,7 @@ return (
                       className="scroll-container"
                       ref={womenContainerRef}
                     >
-                      {renderList(enteredNames.women)}
+                      {renderCompactResults(enteredNames.women)}
                     </div>
                   </div>
                 )}

@@ -135,34 +135,35 @@ const ArchivedSessions = () => {
         <div
           style={{
             height: '350px',
-            overflowY: 'hidden',
+            overflowY: 'auto',
             padding: '10px',
             backgroundColor: 'rgba(255, 255, 255, 0.1)',
             borderRadius: '5px',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '10px',
           }}
         >
           {currentSessions.length > 0 ? (
-            currentSessions.map((session, index) => (
-              <div
-                key={index}
-                style={{
-                  border: '1px solid #ccc',
-                  padding: '10px',
-                  borderRadius: '5px',
-                  backgroundColor: '#444',
-                  color: '#fff',
-                }}
-              >
-                <p><strong>Date:</strong> {session.date}</p>
-                <p><strong>Player:</strong> {session.playerName}</p>
-                <p><strong>Men:</strong> {session.men.length} players, Total Time: {session.menTime}s</p>
-                <p><strong>Women:</strong> {session.women.length} players, Total Time: {session.womenTime}s</p>
-                <p><strong>Total Game Time:</strong> {session.totalTime}s</p>
-              </div>
-            ))
+            <table style={{ width: '100%', borderCollapse: 'collapse', color: '#fff' }}>
+              <thead>
+                <tr>
+                  <th style={{ border: '1px solid #ddd', padding: '8px' }}>Date</th>
+                  <th style={{ border: '1px solid #ddd', padding: '8px' }}>Player</th>
+                  <th style={{ border: '1px solid #ddd', padding: '8px' }}>M: Time</th>
+                  <th style={{ border: '1px solid #ddd', padding: '8px' }}>W: Time</th>
+                  <th style={{ border: '1px solid #ddd', padding: '8px' }}>Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {currentSessions.map((session, index) => (
+                  <tr key={index}>
+                    <td style={{ border: '1px solid #ddd', padding: '8px' }}>{session.date}</td>
+                    <td style={{ border: '1px solid #ddd', padding: '8px' }}>{session.playerName}</td>
+                    <td style={{ border: '1px solid #ddd', padding: '8px' }}>M: {session.menTime}s</td>
+                    <td style={{ border: '1px solid #ddd', padding: '8px' }}>W: {session.womenTime}s</td>
+                    <td style={{ border: '1px solid #ddd', padding: '8px' }}>{session.totalTime}s</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           ) : (
             <p>No archived sessions found.</p>
           )}
@@ -218,7 +219,7 @@ const ArchivedSessions = () => {
               >
                 Go
               </button>
-              </div>
+            </div>
           </div>
 
           <button
