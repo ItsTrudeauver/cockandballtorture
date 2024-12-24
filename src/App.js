@@ -357,82 +357,72 @@ const App = () => {
   
 
   
-  const handleSubmit = async (e) => {
+ const handleSubmit = async (e) => {
     e.preventDefault();
-  
+
     const normalizedName = name
-      .normalize('NFD')
-      .trim()
-      .replace(/\p{Diacritic}/gu, '')
-      .replace(' ', '_');
-  
-    // Clear the input immediately
-    setName('');
-  
-    // Fetch and validate data from Wikidata
+        .normalize('NFD')
+        .trim()
+        .replace(/\p{Diacritic}/gu, '')
+        .replace(/\s+/g, '_') // Replace spaces with underscores consistently
+        .toLowerCase(); // Ensure consistent casing
+
+    setName(''); // Clear input immediately
+
     const validation = await fetchWikidataInfo(normalizedName);
-  
-    // Check for duplicate names by name or ID
-    const isDuplicate =
-      enteredNames.men.some(
-        (player) =>
-          player.name.toLowerCase() === normalizedName.toLowerCase() ||
-          (validation && validation.id && player.id === validation.id)
-      ) ||
-      enteredNames.women.some(
-        (player) =>
-          player.name.toLowerCase() === normalizedName.toLowerCase() ||
-          (validation && validation.id && player.id === validation.id)
-      );
-  
-    if (isDuplicate) {
-      showNotification('This name or entity already exists in the list.');
-      return; // Stop further processing
+
+    if (!validation || validation.error) {
+        showNotification(validation?.error || 'Invalid input. Please try again.');
+        return;
     }
-  
-    // Show the pending name (optional feedback)
-    setPendingNames((prev) => [...prev, normalizedName]);
-  
-    if (validation.error) {
-      showNotification(validation.error);
-      // Remove from pending names if invalid
-      setPendingNames((prev) => prev.filter((n) => n !== normalizedName));
-      return;
-    }
-  
+
     if (!validation.isValid) {
-      showNotification('Invalid name.');
-      // Remove from pending names if invalid
-      setPendingNames((prev) => prev.filter((n) => n !== normalizedName));
-      return;
+        showNotification('Invalid result. This name cannot be added.');
+        return;
     }
-  
-    // Calculate time interval
+
+    // Add normalized comparison logic to avoid duplicates
+    const isDuplicate = [...enteredNames.men, ...enteredNames.women].some((player) => {
+        const isNameDuplicate = player.name.toLowerCase() === validation.name.toLowerCase();
+        const isIdDuplicate = player.id && player.id === validation.id;
+        const isTimeDuplicate = player.timeInterval && player.timeInterval === validation.timeInterval;
+
+        console.log('Checking player:', player);
+        console.log('Validation result:', validation);
+        console.log('Name duplicate:', isNameDuplicate);
+        console.log('ID duplicate:', isIdDuplicate);
+        console.log('Time interval duplicate:', isTimeDuplicate);
+
+        return isNameDuplicate || isIdDuplicate || isTimeDuplicate;
+    });
+
+    if (isDuplicate) {
+        showNotification('Duplicate result detected. This name or entity is already in the list.');
+        return;
+    }
+
+    // Calculate time interval for unique entries
     const currentTime = new Date().getTime();
     const interval = lastCorrectTime.current
-      ? ((currentTime - lastCorrectTime.current) / 1000).toFixed(3)
-      : timer.toFixed(3);
-  
+        ? ((currentTime - lastCorrectTime.current) / 1000).toFixed(3)
+        : timer.toFixed(3);
+
     lastCorrectTime.current = currentTime;
-  
-    // Add timeInterval to validation object
-    validation.timeInterval = interval;
-  
-    // Update the appropriate list
+
+    validation.timeInterval = interval; // Attach time interval to the result
+
+    // Add validated name to appropriate list
     if (validation.gender === 'male' && menCount < 100) {
-      setMenCount((c) => c + 1);
-      setEnteredNames((prev) => ({ ...prev, men: [...prev.men, validation] }));
+        setMenCount((c) => c + 1);
+        setEnteredNames((prev) => ({ ...prev, men: [...prev.men, validation] }));
     } else if (validation.gender === 'female' && womenCount < 100) {
-      setWomenCount((c) => c + 1);
-      setEnteredNames((prev) => ({ ...prev, women: [...prev.women, validation] }));
+        setWomenCount((c) => c + 1);
+        setEnteredNames((prev) => ({ ...prev, women: [...prev.women, validation] }));
     } else {
-      showNotification('Cannot add more entities in this category.');
+        showNotification('Cannot add more entities to this category.');
     }
-  
-    // Remove from pending names once processed
-    setPendingNames((prev) => prev.filter((n) => n !== normalizedName));
-  };
-  
+};
+
 
 
   const startGame = () => {

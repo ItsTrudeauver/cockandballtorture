@@ -1,4 +1,4 @@
-const API_BASE_URL = '/api/sessions';
+const API_BASE_URL = '/api/sessions/create';
 
 export const saveSession = async (session) => {
   try {
