@@ -125,7 +125,7 @@ const App = () => {
     };
   
     try {
-      const response = await fetch('/sessions', {
+      const response = await fetch('/sessions/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(sessionData),
@@ -938,15 +938,15 @@ return (
 </button>
 
 <button
-  onClick={() => window.location.href = '/'} // Navigate to home page
+  onClick={() => window.location.href = '/'} 
   style={{
     marginLeft: '10px',
     padding: '15px 30px',
     fontSize: '1.1rem',
-    backgroundColor: '#3498db', // Blue for home button
+    backgroundColor: '#3498db',
     color: 'white',
     borderRadius: '10px',
-    cursor: 'pointer', // Always clickable
+    cursor: 'pointer', 
     border: 'none',
   }}
 >

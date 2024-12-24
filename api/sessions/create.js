@@ -8,7 +8,7 @@ module.exports = async (req, res) => {
     let rawBody = "";
 
     try {
-        // Read the raw body
+ 
         await new Promise((resolve, reject) => {
             req.on("data", (chunk) => {
                 rawBody += chunk;
@@ -17,10 +17,9 @@ module.exports = async (req, res) => {
             req.on("error", reject);
         });
 
-        // Parse the raw body as JSON
         const body = JSON.parse(rawBody);
 
-        // Validate required fields
+       
         if (!body.playerName || !body.date) {
             return res.status(400).json({ message: "Missing required fields: playerName or date" });
         }
@@ -30,8 +29,6 @@ module.exports = async (req, res) => {
         const sessionData = {
             playerName: body.playerName,
             date: body.date,
-            men: body.men || [],
-            women: body.women || [],
             menTime: body.menTime || 0,
             womenTime: body.womenTime || 0,
             totalTime: body.totalTime || 0,
