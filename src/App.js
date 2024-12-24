@@ -494,7 +494,31 @@ const App = () => {
   
     
 };
+const renderList = (players) => {
+  if (!players || players.length === 0) {
+    return <div style={{ textAlign: 'center', color: '#bbb' }}>No players added yet.</div>;
+  }
 
+  return players.map((player, index) => (
+    <div key={index} style={styles.listItem}>
+      {player.image && (
+        <img
+          src={player.image}
+          alt={player.name}
+          style={{
+            width: '50px',
+            height: '50px',
+            borderRadius: '50%',
+            objectFit: 'cover',
+          }}
+        />
+      )}
+      <div style={styles.nameBox}>
+        {player.name} ({player.timeInterval}s)
+      </div>
+    </div>
+  ));
+};
 const renderCompactResults = (sessions) => {
   if (!Array.isArray(sessions) || sessions.length === 0) {
       return <div style={{ textAlign: 'center', color: '#bbb' }}>No results available.</div>;
@@ -728,7 +752,7 @@ return (
                       className="scroll-container"
                       ref={menContainerRef}
                     >
-                      {renderCompactResults(enteredNames.men)}
+                      {renderList(enteredNames.men)}
                     </div>
 
                     <div
@@ -745,7 +769,7 @@ return (
                       className="scroll-container"
                       ref={womenContainerRef}
                     >
-                      {renderCompactResults(enteredNames.women)}
+                      {renderList(enteredNames.women)}
                     </div>
                   </div>
                 )}
