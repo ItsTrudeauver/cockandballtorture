@@ -506,8 +506,8 @@ const renderCompactResults = (sessions) => {
               <tr>
                   <th style={{ border: '1px solid #ddd', padding: '8px' }}>Date</th>
                   <th style={{ border: '1px solid #ddd', padding: '8px' }}>Player</th>
-                  <th style={{ border: '1px solid #ddd', padding: '8px' }}>M: Time</th>
-                  <th style={{ border: '1px solid #ddd', padding: '8px' }}>W: Time</th>
+                  <th style={{ border: '1px solid #ddd', padding: '8px' }}>Men</th>
+                  <th style={{ border: '1px solid #ddd', padding: '8px' }}>Women</th>
                   <th style={{ border: '1px solid #ddd', padding: '8px' }}>Total</th>
               </tr>
           </thead>
@@ -516,8 +516,8 @@ const renderCompactResults = (sessions) => {
                   <tr key={index}>
                       <td style={{ border: '1px solid #ddd', padding: '8px' }}>{session.date}</td>
                       <td style={{ border: '1px solid #ddd', padding: '8px' }}>{session.playerName}</td>
-                      <td style={{ border: '1px solid #ddd', padding: '8px' }}>M: {session.menTime}</td>
-                      <td style={{ border: '1px solid #ddd', padding: '8px' }}>W: {session.womenTime}</td>
+                      <td style={{ border: '1px solid #ddd', padding: '8px' }}>{session.menTime}</td>
+                      <td style={{ border: '1px solid #ddd', padding: '8px' }}>{session.womenTime}</td>
                       <td style={{ border: '1px solid #ddd', padding: '8px' }}>{session.totalTime}</td>
                   </tr>
               ))}
