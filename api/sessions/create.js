@@ -1,7 +1,7 @@
 const { connectToDatabase, Session } = require("../../utils/db");
 
 module.exports = async (req, res) => {
-    if (req.method != 'POST') {
+    if (['GET', 'POST', 'DELETE'].includes(req.method)) {
         return res.status(405).json({ message: 'Method not allowed' });
     }
 
