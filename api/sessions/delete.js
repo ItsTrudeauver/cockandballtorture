@@ -2,7 +2,7 @@ const { connectToDatabase, Session } = require("../../utils/db");
 
 module.exports = async (req, res) => {
     if (req.method !== 'DELETE') {
-        return res.status(405).json({ message: 'Method not allowed' });
+        return res.status(405).json({ message: 'Method not allowed, DELETE expected' });
     }
 
     try {
